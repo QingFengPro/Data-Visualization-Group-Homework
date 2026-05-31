@@ -7,7 +7,7 @@ import pandas as pd
 
 from common import (
     BASE_DIR, DIR_INSTITUTION, CN_TO_ISO, TECH_BLUE_THEME as T,
-    read_excel_safe, write_html, write_common_css,
+    read_excel_safe, write_html, write_common_css, OUTPUT_DIR,
 )
 
 write_common_css()

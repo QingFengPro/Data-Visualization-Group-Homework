@@ -9,7 +9,7 @@ from common import (
     BASE_DIR, DIR_COUNTRY_DISC,
     DISCIPLINE_CATEGORY, CATEGORY_ORDER, CATEGORY_COLORS,
     TECH_BLUE_THEME as T,
-    read_excel_safe, write_html, write_common_css,
+    read_excel_safe, write_html, write_common_css, OUTPUT_DIR,
 )
 
 write_common_css()

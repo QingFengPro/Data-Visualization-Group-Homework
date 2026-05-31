@@ -44,7 +44,7 @@ agg_data = {
     "sum": {"name": "总体 (125+135)", "papers": papers_sum, "total": sum(papers_sum.values())},
 }
 
-graph_path = os.path.join(BASE_DIR, "discipline_graph.json")
+graph_path = os.path.join(OUTPUT_DIR, "discipline_graph.json")
 graph_data = load_json(graph_path, description="discipline_graph.json")
 
 # ═══════════════════════════════════════════════════════════════════

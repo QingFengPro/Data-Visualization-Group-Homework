@@ -8,7 +8,7 @@ import pandas as pd
 from common import (
     BASE_DIR, DATA_DIR, DIR_COUNTRY, DIR_INSTITUTION,
     CN_TO_ISO, NEIGHBOR_ISO, NON_EUROPEAN_ISO, TECH_BLUE_THEME as T,
-    read_excel_safe, write_html, load_json, write_common_css, OUTPUT_DIR,
+    read_excel_safe, write_html, load_json, write_common_css, OUTPUT_DIR
 )
 
 write_common_css()
@@ -57,8 +57,8 @@ print(f"Institutions loaded: {len(institutions_data)}")
 # ═══════════════════════════════════════════════════════════════════
 # 2. TopoJSON → GeoJSON（带缓存）
 # ═══════════════════════════════════════════════════════════════════
-CACHE_PATH = os.path.join(BASE_DIR, ".geo_cache.json")
-TOPO_PATH = os.path.join(BASE_DIR, "world-50m.json")
+CACHE_PATH = os.path.join(OUTPUT_DIR, ".geo_cache.json")
+TOPO_PATH = os.path.join(DATA_DIR, "world-50m.json")
 
 def build_geojson():
     topo = load_json(TOPO_PATH, description="world-50m.json")

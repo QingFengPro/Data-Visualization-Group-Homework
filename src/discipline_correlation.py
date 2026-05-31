@@ -9,7 +9,7 @@ import json
 import os
 import sys
 
-from common import DISCIPLINE_CATEGORY, CATEGORY_ORDER, CATEGORY_COLORS, check_python_deps
+from common import DISCIPLINE_CATEGORY, CATEGORY_ORDER, CATEGORY_COLORS, check_python_deps, OUTPUT_DIR
 
 if not check_python_deps("openai"):
     print("请先安装依赖: pip install openai")
@@ -151,7 +151,7 @@ def main():
         sys.exit(1)
 
     # 保存结果
-    output_path = os.path.join(BASE_DIR, "discipline_graph.json")
+    output_path = os.path.join(OUTPUT_DIR, "discipline_graph.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 

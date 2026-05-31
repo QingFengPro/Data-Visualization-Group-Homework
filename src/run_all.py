@@ -13,7 +13,7 @@ import subprocess, sys, os, time
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-from common import BASE_DIR, check_python_deps
+from common import SRC_DIR, check_python_deps
 
 SCRIPTS = [
     ("generate_trend_viz.py",       "📈 时间趋势图",       True),
@@ -28,7 +28,7 @@ AI_SCRIPT = ("discipline_correlation.py", "🤖 AI 学科关联分析", False)
 
 
 def run_script(script_name, label):
-    path = os.path.join(BASE_DIR, script_name)
+    path = os.path.join(SRC_DIR, script_name)
     if not os.path.exists(path):
         print(f"  ✘ File not found: {path}")
         return False
@@ -36,7 +36,7 @@ def run_script(script_name, label):
     print(f"\n{'='*60}")
     print(f"  {label}")
     print(f"{'='*60}")
-    r = subprocess.run([sys.executable, path], cwd=BASE_DIR)
+    r = subprocess.run([sys.executable, path], cwd=SRC_DIR)
     elapsed = time.time() - start
     if r.returncode == 0:
         print(f"  ✔ Done ({elapsed:.1f}s)")
@@ -79,8 +79,9 @@ def main():
     print(f"\n  Done: {ok}/{len(results)}")
 
     if ok == len(results):
+        from common import OUTPUT_DIR
         print(f"\n  🎉 All generated! Open index.html to view:")
-        print(f"     {os.path.join(BASE_DIR, 'index.html')}")
+        print(f"     {os.path.join(OUTPUT_DIR, 'index.html')}")
 
 
 if __name__ == "__main__":
