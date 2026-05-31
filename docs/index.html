@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国-中东欧学术合作可视化</title>
+<link rel="stylesheet" href="common.css">
+<style>
+body{overflow:hidden;height:100vh;display:flex;flex-direction:column}
+.nav{display:flex;align-items:center;gap:0;padding:0 20px;background:#fff;border-bottom:1px solid var(--c-border);box-shadow:0 2px 8px rgba(0,0,0,0.06);z-index:100;flex-shrink:0}
+.nav-brand{font-size:15px;font-weight:700;color:var(--c-primary);padding:0 20px 0 0;white-space:nowrap;border-right:1px solid var(--c-border);margin-right:8px}
+.nav-tabs{display:flex;align-items:center;gap:2px;overflow-x:auto}
+.nav-tab{padding:14px 18px;font-size:13px;color:#999;cursor:pointer;border:none;background:none;white-space:nowrap;transition:all 0.2s;position:relative;font-family:inherit}
+.nav-tab:hover{color:var(--c-primary);background:#f5f5f5}
+.nav-tab.active{color:var(--c-primary);font-weight:600}
+.nav-tab.active::after{content:"";position:absolute;bottom:0;left:12px;right:12px;height:2.5px;background:var(--c-primary);border-radius:2px 2px 0 0}
+.content{flex:1;position:relative;background:var(--c-bg)}
+.content iframe{position:absolute;inset:0;width:100%;height:100%;border:none;visibility:hidden}
+.content iframe.active{visibility:visible}
+.content .inline-page{position:absolute;inset:0;width:100%;height:100%;overflow:auto;visibility:hidden;display:flex;align-items:center;justify-content:center}
+.content .inline-page.active{visibility:visible}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">🔬 中国-中东欧学术合作</div>
+  <div class="nav-tabs" id="navTabs"></div>
+</nav>
+
+<div class="content" id="content"></div>
+
+<script>
+const PAGES = [
+  { id: "overview",  label: "📋 概览",    url: null },
+  { id: "trend",     label: "📈 时间趋势", url: "trend_visualization.html" },
+  { id: "map",       label: "🗺️ 地理分布", url: "cee_map_visualization.html" },
+  { id: "bar",       label: "📊 国家排名", url: "cee_bar_ranking.html" },
+  { id: "network",   label: "🥧 学科网络", url: "discipline_visualization.html" },
+  { id: "institution",label:"🏛️ 机构排名", url: "institution_visualization.html" },
+
+  { id: "team",      label: "👥 团队",     url: null },
+];
+
+let activeTab = "overview";
+const navTabs = document.getElementById("navTabs");
+const contentDiv = document.getElementById("content");
+const elements = {};
+
+PAGES.forEach(p => {
+  const tab = document.createElement("div");
+  tab.className = "nav-tab";
+  tab.textContent = p.label;
+  tab.onclick = () => switchTab(p.id);
+  navTabs.appendChild(tab);
+  p.tabEl = tab;
+
+  if (p.url) {
+    // 延迟加载: 首次点击时才设 src
+    const iframe = document.createElement("iframe");
+    iframe.dataset.src = p.url;
+    contentDiv.appendChild(iframe);
+    elements[p.id] = iframe;
+  } else {
+    const div = document.createElement("div");
+    div.className = "inline-page";
+    div.innerHTML = p.id === "overview" ? overviewHTML() : teamHTML();
+    contentDiv.appendChild(div);
+    elements[p.id] = div;
+  }
+});
+
+function switchTab(id) {
+  if (activeTab === id) return;
+  const old = PAGES.find(p => p.id === activeTab);
+  if (old) { old.tabEl.classList.remove("active"); elements[old.id].classList.remove("active"); }
+
+  activeTab = id;
+  const cur = PAGES.find(p => p.id === id);
+  cur.tabEl.classList.add("active");
+  const el = elements[id];
+
+  // 延迟加载: 首次点击才设 src，保证 iframe 可见时 D3 能测到尺寸
+  if (el.tagName === "IFRAME" && !el.src && el.dataset.src) {
+    el.src = el.dataset.src;
+  }
+
+  el.classList.add("active");
+}
+
+// init
+PAGES.find(p => p.id === "overview").tabEl.classList.add("active");
+elements["overview"].classList.add("active");
+
+function overviewHTML() {
+  return `<div style="text-align:center;max-width:750px;padding:40px">
+  <div style="font-size:56px;margin-bottom:16px">🔬</div>
+  <h1 style="font-size:30px;font-weight:700;color:#1a237e;margin-bottom:10px">中国-中东欧学术合作可视化</h1>
+  <p style="font-size:14px;color:#888;margin-bottom:36px;line-height:1.7">基于 Web of Science 数据库，分析 2011-2020 年中国与中东欧 17 国<br>在 93 个学科领域的合作论文分布与关联关系</p>
+  <div style="display:flex;justify-content:center;gap:40px;margin-bottom:36px">
+    <div style="text-align:center"><div style="font-size:42px;font-weight:800;color:#1a237e">17</div><div style="font-size:13px;color:#999;margin-top:4px">中东欧国家</div></div>
+    <div style="text-align:center"><div style="font-size:42px;font-weight:800;color:#3949ab">93</div><div style="font-size:13px;color:#999;margin-top:4px">学科领域</div></div>
+    <div style="text-align:center"><div style="font-size:42px;font-weight:800;color:#00acc1">25,685</div><div style="font-size:13px;color:#999;margin-top:4px">合作论文</div></div>
+    <div style="text-align:center"><div style="font-size:42px;font-weight:800;color:#ff6e40">2</div><div style="font-size:13px;color:#999;margin-top:4px">分析时期</div></div>
+  </div>
+  <p style="font-size:12px;color:#bbb">数据来源: Web of Science | 可视化: D3.js v7</p>
+  <p style="font-size:12px;color:#bbb;margin-top:4px">点击顶部导航标签开始浏览 →</p>
+</div>`;
+}
+
+function teamHTML() {
+  return `<div style="text-align:center;max-width:750px;padding:40px">
+  <div style="font-size:44px;margin-bottom:10px">👥</div>
+  <h2 style="font-size:22px;font-weight:700;color:#1a237e;margin-bottom:6px">项目团队</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:28px 0">
+    ${Array.from({length:6},(_,i)=>`
+    <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px 16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+      <div style="width:52px;height:52px;border-radius:50%;background:#e8eaf6;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:22px">👤</div>
+      <div style="font-size:14px;font-weight:600;color:#333">组员 ${i+1}</div>
+      <div style="font-size:11px;color:#bbb;margin-top:4px">姓名 / 分工</div>
+    </div>`).join("")}
+  </div>
+  <div style="text-align:left;background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px 24px;line-height:1.8;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+    <h3 style="color:#1a237e;font-size:14px;margin-bottom:8px">📌 关键发现</h3>
+    <p style="font-size:12px;color:#888">1. 中东欧合作发文量从 2011 年的 1,046 篇增长至 2020 年的 4,791 篇。</p>
+    <p style="font-size:12px;color:#888">2. 波兰、捷克、希腊为合作最多国家，工学、理学为最密集学科门类。</p>
+    <p style="font-size:12px;color:#888">3. 125-135 期间多数国家合作量增长，部分学科领域增长显著。</p>
+  </div>
+  <p style="margin-top:20px;font-size:11px;color:#bbb">数据来源: Web of Science | 可视化: D3.js v7 | 地图: Natural Earth 50m</p>
+</div>`;
+}
+</script>
+</body>
+</html>
