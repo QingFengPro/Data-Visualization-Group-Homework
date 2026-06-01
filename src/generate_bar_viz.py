@@ -15,18 +15,37 @@ write_common_css()
 xlsx_path = os.path.join(DIR_COUNTRY, "我国与各国在125-135所发合作文章数量.xlsx")
 df = read_excel_safe(xlsx_path, description="各国发文量")
 
-cee_data = []
+# Build lookup tables from both 125 and 135 columns
+p125_map = {}
+p135_map = {}
 for _, row in df.iterrows():
-    name = str(row.iloc[0]).strip().upper()
-    if name in CEE_EXACT:
-        p125 = int(row.iloc[1] or 0)
-        p135 = int(row.iloc[6] or 0)
-        cee_data.append({
-            "name_cn": CEE_EXACT[name], "name_en": name,
-            "p125": p125, "r125": int(row.iloc[2]) if pd.notna(row.iloc[2]) else "-",
-            "p135": p135, "r135": int(row.iloc[7]) if pd.notna(row.iloc[7]) else "-",
-            "delta": p135 - p125,
-        })
+    name125 = str(row.iloc[0]).strip().upper()
+    if name125 in CEE_EXACT:
+        p125_map[name125] = {
+            "p125": int(row.iloc[1] or 0),
+            "r125": int(row.iloc[2]) if pd.notna(row.iloc[2]) else "-",
+        }
+    name135 = str(row.iloc[5]).strip().upper()
+    if name135 in CEE_EXACT:
+        p135_map[name135] = {
+            "p135": int(row.iloc[6] or 0),
+            "r135": int(row.iloc[7]) if pd.notna(row.iloc[7]) else "-",
+        }
+
+cee_data = []
+for name in CEE_EXACT:
+    d125 = p125_map.get(name, {"p125": 0, "r125": "-"})
+    d135 = p135_map.get(name, {"p135": 0, "r135": "-"})
+    p125 = d125["p125"]
+    p135 = d135["p135"]
+    cee_data.append({
+        "name_cn": CEE_EXACT[name], "name_en": name,
+        "p125": p125, "r125": d125["r125"],
+        "p135": p135, "r135": d135["r135"],
+        "delta": p135 - p125,
+    })
+
+# Sort by 135 period by default
 cee_data.sort(key=lambda x: x["p135"], reverse=True)
 print(f"Loaded {len(cee_data)} CEE countries")
 

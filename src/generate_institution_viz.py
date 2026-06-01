@@ -27,32 +27,44 @@ for _, row in df_cn125.iterrows():
     en = str(row.iloc[0]).strip()
     cn = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else en
     cnt = int(row.iloc[2]) if pd.notna(row.iloc[2]) else 0
-    cn_all[cn] = {"name": cn, "name_en": en, "p125": cnt, "p135": 0}
+    cn_all[en] = {"name": cn, "name_en": en, "p125": cnt, "p135": 0}
 
 for _, row in df_cn135.iterrows():
     en = str(row.iloc[0]).strip()
     cn = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else en
     cnt = int(row.iloc[2]) if pd.notna(row.iloc[2]) else 0
-    if cn in cn_all:
-        cn_all[cn]["p135"] = cnt
+    if en in cn_all:
+        cn_all[en]["p135"] = cnt
+        # Use the newer Chinese name if available
+        if cn != en:
+            cn_all[en]["name"] = cn
     else:
-        cn_all[cn] = {"name": cn, "name_en": en, "p125": 0, "p135": cnt}
+        cn_all[en] = {"name": cn, "name_en": en, "p125": 0, "p135": cnt}
 
-cn_full = sorted(cn_all.values(), key=lambda x: x["p125"] + x["p135"], reverse=True)
-for i, inst in enumerate(cn_full):
+# Compute rankings independently for each mode
+cn_total = sorted([i for i in cn_all.values() if i["p125"] + i["p135"] > 0], key=lambda x: x["p125"] + x["p135"], reverse=True)
+cn_125 = sorted([i for i in cn_all.values() if i["p125"] > 0], key=lambda x: x["p125"], reverse=True)
+cn_135 = sorted([i for i in cn_all.values() if i["p135"] > 0], key=lambda x: x["p135"], reverse=True)
+
+for i, inst in enumerate(cn_total):
     inst["rank_total"] = i + 1
-
-cn_by_p125 = sorted(cn_full, key=lambda x: x["p125"], reverse=True)
-cn_by_p135 = sorted(cn_full, key=lambda x: x["p135"], reverse=True)
-for i, inst in enumerate(cn_by_p125):
+for i, inst in enumerate(cn_125):
     inst["rank_125"] = i + 1
-for i, inst in enumerate(cn_by_p135):
+for i, inst in enumerate(cn_135):
     inst["rank_135"] = i + 1
-for inst in cn_full:
+
+# For institutions not in a particular ranking, assign a fallback rank
+for inst in cn_all.values():
+    if "rank_total" not in inst:
+        inst["rank_total"] = len(cn_total) + 1
+    if "rank_125" not in inst:
+        inst["rank_125"] = len(cn_125) + 1
+    if "rank_135" not in inst:
+        inst["rank_135"] = len(cn_135) + 1
     inst["rank_change"] = inst["rank_125"] - inst["rank_135"]
     inst["delta"] = inst["p135"] - inst["p125"]
 
-cn_top = cn_full[:15]
+cn_top = cn_total[:15]
 
 # ── 读取中东欧机构完整明细 ──────────────────────────────────
 df_cee125 = read_excel_safe(
@@ -81,26 +93,38 @@ for _, row in df_cee135.iterrows():
     cty_cn = row.iloc[6] if len(row) > 6 and pd.notna(row.iloc[6]) else CEE_EXACT.get(cty_en.upper(), cty_en)
     if en in cee_all:
         cee_all[en]["p135"] = cnt
+        if cn != en:
+            cee_all[en]["name"] = cn
     else:
         cee_all[en] = {"name": cn, "name_en": en, "country": str(cty_cn), "p125": 0, "p135": cnt}
 
-cee_full = sorted(cee_all.values(), key=lambda x: x["p125"] + x["p135"], reverse=True)
-for i, inst in enumerate(cee_full):
-    inst["rank_total"] = i + 1
+# Compute rankings independently for each mode
+cee_total = sorted([i for i in cee_all.values() if i["p125"] + i["p135"] > 0], key=lambda x: x["p125"] + x["p135"], reverse=True)
+cee_125 = sorted([i for i in cee_all.values() if i["p125"] > 0], key=lambda x: x["p125"], reverse=True)
+cee_135 = sorted([i for i in cee_all.values() if i["p135"] > 0], key=lambda x: x["p135"], reverse=True)
 
-cee_by_p125 = sorted(cee_full, key=lambda x: x["p125"], reverse=True)
-cee_by_p135 = sorted(cee_full, key=lambda x: x["p135"], reverse=True)
-for i, inst in enumerate(cee_by_p125):
+for i, inst in enumerate(cee_total):
+    inst["rank_total"] = i + 1
+for i, inst in enumerate(cee_125):
     inst["rank_125"] = i + 1
-for i, inst in enumerate(cee_by_p135):
+for i, inst in enumerate(cee_135):
     inst["rank_135"] = i + 1
-for inst in cee_full:
+
+# For institutions not in a particular ranking, assign a fallback rank
+for inst in cee_all.values():
+    if "rank_total" not in inst:
+        inst["rank_total"] = len(cee_total) + 1
+    if "rank_125" not in inst:
+        inst["rank_125"] = len(cee_125) + 1
+    if "rank_135" not in inst:
+        inst["rank_135"] = len(cee_135) + 1
     inst["rank_change"] = inst["rank_125"] - inst["rank_135"]
     inst["delta"] = inst["p135"] - inst["p125"]
 
-cee_top = cee_full[:15]
+cee_top = cee_total[:15]
 
-print(f"CN institutions (full): {len(cn_full)}, CEE institutions (full): {len(cee_full)}")
+print(f"CN institutions (total>0): {len(cn_total)}, 125>0: {len(cn_125)}, 135>0: {len(cn_135)}")
+print(f"CEE institutions (total>0): {len(cee_total)}, 125>0: {len(cee_125)}, 135>0: {len(cee_135)}")
 print(f"CN top 15: {[d['name'] for d in cn_top]}")
 print(f"CEE top 15: {[d['name'] for d in cee_top]}")
 
@@ -190,6 +214,12 @@ function getRankLabel(d){
   if(rc<0) return {cls:"down",txt:"↓"+Math.abs(rc)};
   return {cls:"same",txt:"−"};
 }
+function filterData(data){
+  if(currentMode==="125") return data.filter(d=>d.p125>0);
+  if(currentMode==="135") return data.filter(d=>d.p135>0);
+  if(currentMode==="delta") return data.filter(d=>d.p125>0&&d.p135>0);
+  return data.filter(d=>d.p125+d.p135>0);
+}
 
 // d3.select("#statsSummary").html(
 //   '<div class="item"><div class="num">'+CN.length+'</div><div class="label">中国机构(全量)</div></div>'+
@@ -201,7 +231,8 @@ function getRankLabel(d){
 function drawPanel(containerId, data, accentColor, showCountry){
   var c=d3.select("#"+containerId);
   var isDelta=currentMode==="delta";
-  var sorted=[...data].sort((a,b)=>getVal(b)-getVal(a));
+  var filtered=filterData(data);
+  var sorted=[...filtered].sort((a,b)=>getVal(b)-getVal(a));
   var vals=sorted.map(d=>getVal(d));
   var maxV=isDelta?d3.max(vals.map(Math.abs))||1:d3.max(vals)||1;
 
@@ -266,8 +297,10 @@ function drawPanel(containerId, data, accentColor, showCountry){
 function renderAll(){
   var modeLabels={"total":"125+135","125":"125","135":"135","delta":"变化量 (125→135)"};
   var isDelta=currentMode==="delta";
-  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 共 "+CN.length+" 个");
-  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 共 "+CEE.length+" 个");
+  var cnFiltered=filterData(CN);
+  var ceeFiltered=filterData(CEE);
+  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 共 "+cnFiltered.length+" 个");
+  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 共 "+ceeFiltered.length+" 个");
   var cnColor=isDelta?"#69f0ae":"#4fc3f7";
   var ceeColor=isDelta?"#69f0ae":"#7c4dff";
   drawPanel("chartCN", CN, cnColor, false);

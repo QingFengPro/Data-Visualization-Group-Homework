@@ -103,6 +103,8 @@ html = r"""<!DOCTYPE html>
 <script>
 const COUNTRIES=__COUNTRIES__, AGG_DATA=__AGG_DATA__, GRAPH_EDGES=__GRAPH_EDGES__, DISC_CAT=__DISC_CAT__, CAT_ORDER=__CAT_ORDER__, CAT_COLORS=__CAT_COLORS__;
 const PIE_COLORS=["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80","#b2ff59"];
+const CAT_LEGEND=["理学类","工学类","医学类","农学类","人文社科类"];
+const LEGEND_COLORS={"理学类":"#4CAF50","工学类":"#F44336","医学类":"#00BCD4","农学类":"#8BC34A","人文社科类":"#FF9800"};
 
 let currentCountry=COUNTRIES[0], isAgg=false, aggKey="125", searchTerm="";
 
@@ -210,8 +212,8 @@ function drawNetwork(){
   for(const e of GRAPH_EDGES){if(!adj[e.source])adj[e.source]=new Set();if(!adj[e.target])adj[e.target]=new Set();adj[e.source].add(e.target);adj[e.target].add(e.source)}
   for(const n of top11){if(adj[n])for(const nb of adj[n]){if(paperDiscs.has(nb))connected.add(nb)}}
   const es=new Set(),el=[];for(const e of GRAPH_EDGES){if(connected.has(e.source)&&connected.has(e.target)){const k=[e.source,e.target].sort().join("|||");if(!es.has(k)){es.add(k);el.push({source:e.source,target:e.target,relation:e.relation})}}}
-  netNodes=[];const nm={};let ci=0;
-  for(const n of connected){if(papers[n]!==undefined){const isT=top11.has(n);netNodes.push({id:n,papers:papers[n],isTop11:isT,color:isT?["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80"][ci++%11]:"#aaa"});nm[n]=netNodes[netNodes.length-1]}}
+  netNodes=[];const nm={};
+  for(const n of connected){if(papers[n]!==undefined){const isT=top11.has(n);const cat=DISC_CAT[n]||"未分类";const catGroup=cat==="理学"?"理学类":cat==="工学"?"工学类":cat==="医学"?"医学类":cat==="农学"?"农学类":["哲学","经济学","法学","教育学","文学","历史学","管理学","艺术学"].includes(cat)?"人文社科类":"其他";const nodeColor=LEGEND_COLORS[catGroup]||"#aaa";netNodes.push({id:n,papers:papers[n],isTop11:isT,color:nodeColor,catGroup:catGroup});nm[n]=netNodes[netNodes.length-1]}}
   netEdges=el.filter(e=>nm[e.source]&&nm[e.target]);
 
   const rS=d3.scaleSqrt().domain([1,d3.max(netNodes,d=>d.papers)||1]).range([7,45]);
@@ -221,9 +223,9 @@ function drawNetwork(){
   let eci=0;
 
   const link=zg.append("g").selectAll("line").data(netEdges).join("line")
-    .attr("stroke",d=>{const b=top11.has(d.source)&&top11.has(d.target);return b?["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80"][(eci++)%11]:"#eee"})
-    .attr("stroke-width",d=>top11.has(d.source)&&top11.has(d.target)?2:1.2)
-    .attr("opacity",d=>top11.has(d.source)&&top11.has(d.target)?0.85:0.7);
+    .attr("stroke","#ccc")
+    .attr("stroke-width",1.5)
+    .attr("opacity",0.6);
 
   const node=zg.append("g").selectAll("g").data(netNodes).join("g")
     .attr("class",d=>"net-node nn-"+d.id.replace(/\s/g,"_"))
@@ -242,6 +244,16 @@ function drawNetwork(){
   d3.select("#infoBar").html(`<span>数据源: ${data.name}</span><span>显示学科: ${netNodes.length}</span><span>关联边: ${netEdges.length}</span>`);
   svg.call(d3.zoom().scaleExtent([0.3,4]).on("zoom",(e)=>{zg.attr("transform",e.transform)}));
   if(searchTerm)applySearch(searchTerm);
+
+  // Legend
+  const legendG=svg.append("g").attr("transform",`translate(${w-140},20)`);
+  legendG.append("rect").attr("width",130).attr("height",CAT_LEGEND.length*22+14).attr("fill","rgba(255,255,255,0.92)").attr("stroke","#e0e0e0").attr("rx",6);
+  legendG.append("text").attr("x",10).attr("y",16).style("font-size","11px").style("font-weight","700").style("fill","#333").text("学科门类");
+  CAT_LEGEND.forEach((cat,i)=>{
+    const y=32+i*22;
+    legendG.append("circle").attr("cx",18).attr("cy",y).attr("r",6).attr("fill",LEGEND_COLORS[cat]);
+    legendG.append("text").attr("x",30).attr("y",y+4).style("font-size","10px").style("fill","#555").text(cat);
+  });
 }
 
 // ═══════════════════════ SEARCH ═══════════════════════

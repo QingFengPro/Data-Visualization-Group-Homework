@@ -100,7 +100,23 @@ path.attr("stroke-dasharray",totalLen).attr("stroke-dashoffset",totalLen)
 g.selectAll("circle.rdot").data(DATA).join("circle").attr("class","rdot")
   .attr("cx",d=>x(d.year)+x.bandwidth()/2).attr("cy",d=>y2(d.ratio)).attr("r",4)
   .attr("fill","#7c4dff").attr("stroke","#0a0e27").attr("stroke-width",2).attr("opacity",0)
-  .transition().duration(400).delay((d,i)=>800+i*60).attr("opacity",1);
+  .transition().duration(400).delay((d,i)=>800+i*60).attr("opacity",1)
+  .on("end", function() {
+    d3.select(this)
+      .on("mouseenter", function(e,d) {
+        d3.select(this).attr("r",7).attr("stroke-width",3).style("filter","drop-shadow(0 0 6px rgba(124,77,255,0.6))");
+        d3.select("#tooltip").style("opacity",1)
+          .html(`<b>${d.year}年</b><br>占比: <span style="color:#7c4dff;font-weight:700">${d.ratio}%</span><br>中东欧发文: ${d.cee.toLocaleString()} 篇<br>中国总发文: ${d.china.toLocaleString()} 篇`)
+          .style("left",(e.pageX+14)+"px").style("top",(e.pageY-10)+"px");
+      })
+      .on("mousemove", function(e) {
+        d3.select("#tooltip").style("left",(e.pageX+14)+"px").style("top",(e.pageY-10)+"px");
+      })
+      .on("mouseleave", function() {
+        d3.select(this).attr("r",4).attr("stroke-width",2).style("filter","none");
+        d3.select("#tooltip").style("opacity",0);
+      });
+  });
 
 // Divider line at 2015.5
 g.append("line").attr("x1",x(2015)+x.bandwidth()).attr("x2",x(2015)+x.bandwidth())
@@ -112,6 +128,37 @@ g.append("text").attr("x",x(2015)+x.bandwidth()/2).attr("y",-8).attr("text-ancho
 g.append("text").attr("x",-42).attr("y",-10).style("fill","#4fc3f7").style("font-size","11px").text("发文量");
 g.append("text").attr("x",iw+42).attr("y",-10).style("fill","#7c4dff").style("font-size","11px").style("text-anchor","end").text("占比");
 </script>
+
+<div style="max-width:900px;width:95%;margin:0 auto 30px">
+<div style="background:#f0f5f9;padding:24px 28px;border-radius:12px;border-left:4px solid #00e5ff">
+  <h3 style="font-size:15px;font-weight:700;color:#1a237e;margin-bottom:14px">十年合作核心指标</h3>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:11px;margin-bottom:18px">
+    <div style="padding:14px;background:#fff;border-radius:8px;border-left:3px solid #4fc3f7">
+      <div style="font-size:20px;font-weight:800;color:#4fc3f7">358%</div>
+      <div style="color:#666;margin-top:4px">十年增幅<br>(1,046 → 4,791 篇)</div>
+    </div>
+    <div style="padding:14px;background:#fff;border-radius:8px;border-left:3px solid #7c4dff">
+      <div style="font-size:20px;font-weight:800;color:#7c4dff">18%</div>
+      <div style="color:#666;margin-top:4px">125期间年均增长率<br>(2011-2015)</div>
+    </div>
+    <div style="padding:14px;background:#fff;border-radius:8px;border-left:3px solid #00e5ff">
+      <div style="font-size:20px;font-weight:800;color:#00e5ff">3.16%</div>
+      <div style="color:#666;margin-top:4px">2020年占中国总发文比<br>(上升自2.46%)</div>
+    </div>
+  </div>
+
+  <div style="padding:16px;background:#fff;border-radius:8px;border:1px solid #e0e0e0">
+    <h4 style="font-size:13px;font-weight:700;color:#1a237e;margin-bottom:10px">趋势分析</h4>
+    <p style="font-size:12px;color:#555;line-height:1.7;margin:0">
+      <strong>中国与中东欧学术合作随国际交流与政策推动持续深化，整体规模稳步扩容。</strong>
+      十年间合作发文量增长超3.5倍，占中国发文比例稳定在2.5%-3.2%之间，说明该地区已成为中国重要的学术合作伙伴。
+      2013年"一带一路"倡议与2015年"中国-中东欧合作机制"的推出对学术合作的促进作用显著，
+      为今后继续深化合作奠定了坚实基础。
+    </p>
+  </div>
+</div>
+</div>
+
 </body>
 </html>"""
 
