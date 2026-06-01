@@ -27,6 +27,16 @@ h3{font-size:18px;font-weight:600;color:var(--c-primary);margin-bottom:4px}
 </style>
 </head>
 <body>
+<div style="background:linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 16px 30px; margin: 0 0 16px; border-bottom:1px solid #dae3f3;">
+  <div style="max-width:960px; margin:0 auto;">
+    <h2 style="font-size:13px; font-weight:700; color:#1a237e; margin-bottom:8px;">📚 页面说明</h2>
+    <p style="font-size:11px; color:#666; line-height:1.6; margin:0;">
+      本雷达图以学科门类(12 大类：哲学、理学、工学、医学等)为轴，展示中国与各中东欧国家的学科合作特征。
+      每个国家的轮廓反映其在各学科门类中的相对优势。注意：各轴独立归一为 100%，便于对比国别特色。
+    </p>
+  </div>
+</div>
+
 <div class="main">
 <h3>🕸️ 学科门类雷达图 — 多国对比</h3>
 <div class="subtitle">每轴独立归一 = 100%，展示各国相对学科优势</div>
@@ -161,5 +171,43 @@ renderControls();
 drawRadar();
 window.addEventListener("resize",drawRadar);
 </script>
+
+<div style="background:#f0f5f9; padding: 24px; margin: 20px auto; border-radius:12px; max-width:960px; border-left:4px solid #1a237e;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">🔍 学科门类对比洞察</h3>
+  <p style="font-size:11px; color:#666; line-height:1.7; margin:0 0 12px;">
+    <strong>总体特征：</strong>中国与中东欧所有国家都呈现<strong>理学和工学优势、人文社科薄弱</strong>的同构特征。
+    理学(含物理、化学、数学)和工学占合作论文总数的 80% 以上，是合作的绝对主力，而哲学、经济学、法学等人文学科普遍低于 2%。
+  </p>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; font-size:10px; margin-bottom:12px;">
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:2px solid #4fc3f7;">
+      <strong style="color:#4fc3f7;">🥇 理学优势</strong><br/>
+      <span style="color:#666; line-height:1.5;">物理学占比最高(45-60%)，尤以波兰、匈牙利最突出。说明两地在物理学领域有天然的合作基础。</span>
+    </div>
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:2px solid #7c4dff;">
+      <strong style="color:#7c4dff;">🥈 工学多元</strong><br/>
+      <span style="color:#666; line-height:1.5;">工学占比(20-35%)相对稳定，机械、材料、信息工程等分支都有涉及。各国在工学中的优势分化明显。</span>
+    </div>
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:2px solid #00e5ff;">
+      <strong style="color:#00e5ff;">🥉 医学突破</strong><br/>
+      <span style="color:#666; line-height:1.5;">医学占比(8-14%)成为"第三极"，希腊、克罗地亚医学合作权重较高，体现学科多样化趋势。</span>
+    </div>
+  </div>
+  <p style="font-size:11px; color:#666; line-height:1.7; margin:0;">
+    <strong>国别差异：</strong>虽整体上同构，但各国在学科权重上有微妙差异。波兰物理学占比超 47%，而希腊医学权重达 13%。
+    这些差异既反映了各国的学科优势，也为今后的合作提供了明确的方向指引——既可加强已有的强势学科深度合作，
+    也可探索新兴学科(如医学、环境科学)的拓展空间。
+  </p>
+</div>
+
+<div style="background:#fff; border-top:1px solid #e8e8e8; padding: 24px; max-width:960px; margin:20px auto;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">💡 结论与展望</h3>
+  <p style="font-size:11px; color:#666; line-height:1.7; margin:0;">
+    <strong>现状：</strong>中国与中东欧学术合作形成了以"理工医"为支柱、理学为主导的学科体系。
+    这种"倒金字塔"的学科结构既符合国际学术交流规律，也体现了双方优先聚焦于高精尖研究的战略选择。
+    <br/><strong>前景：</strong>随着合作深化，人文社科领域的合作应该成为下一阶段的重点拓展方向，
+    以实现"全学科、多层次、深融合"的学术交流新格局。
+  </p>
+</div>
+
 </body>
 </html>
