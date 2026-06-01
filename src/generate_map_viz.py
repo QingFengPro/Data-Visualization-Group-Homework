@@ -269,9 +269,13 @@ function showDetail(iso){
     <div class="detail-item"><div class="detail-delta ${deltaColor}">${deltaSign}${d.delta.toLocaleString()}</div><div class="detail-label">变化 (${d.delta_pct}%)</div></div>
   `);
   const insts=INSTITUTIONS.filter(i=>i.country_iso===iso).sort((a,b)=>b.papers_sum-a.papers_sum).slice(0,5);
-  let instHtml=`<h4>主要合作机构 (Top 5)</h4>`;
+  const instTotal=d3.sum(insts,i=>i.papers_sum);
+  let instHtml=`<h4>主要合作机构 (Top ${insts.length})</h4>`;
   if(insts.length===0)instHtml+=`<p style="font-size:12px;color:#999">暂无机构数据</p>`;
-  else insts.forEach(i=>{instHtml+=`<div class="inst-item"><span>${i.name}</span><span>${i.papers_sum.toLocaleString()} 篇</span></div>`});
+  else {
+    insts.forEach(i=>{instHtml+=`<div class="inst-item"><span>${i.name}</span><span>${i.papers_sum.toLocaleString()} 篇</span></div>`});
+    if(instTotal<d.papers_sum)instHtml+=`<p style="font-size:11px;color:#999;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0">注：机构合计 ${instTotal.toLocaleString()} 篇，尚有部分论文未归属到具体机构</p>`;
+  }
   d3.select("#instList").html(instHtml);
 }
 
