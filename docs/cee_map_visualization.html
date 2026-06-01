@@ -85,7 +85,8 @@ function getPapers(iso){const d=COUNTRY_DATA[iso];return d?(currentMode==="125"?
 function getCountryCentroid(iso){
   const feat=GEO_JSON.features.find(f=>f.properties.iso===iso);
   if(!feat)return null;
-  const proj=d3.geoMercator().center([18,50]).scale(document.getElementById("mapChart").clientWidth*0.88).translate([document.getElementById("mapChart").clientWidth/2,310]);
+  const w=document.getElementById("mapChart").clientWidth, h=520;
+  const proj=d3.geoMercator().center([18,50]).scale(w*0.88).translate([w/2,h/2]);
   return proj(d3.geoCentroid(feat));
 }
 
@@ -94,11 +95,13 @@ function selectCountry(iso){
   const d=COUNTRY_DATA[iso];if(!d)return;
   const centroid=getCountryCentroid(iso);
   if(centroid){
-    const svg=d3.select("#mapChart svg");
+    const svgEl=document.querySelector("#mapChart svg");
+    if(!svgEl)return;
     const w=document.getElementById("mapChart").clientWidth,h=520;
     const scale=4;
-    const tx=w/2-centroid[0]*scale,ty=h/2-centroid[1]*scale;
-    svg.transition().duration(600).call(d3.zoom().transform,d3.zoomIdentity.translate(tx,ty).scale(scale));
+    const tx=w/2-centroid[0]*scale, ty=h/2-centroid[1]*scale;
+    const z=d3.zoom().scaleExtent([1,15]).on("zoom",(e)=>{d3.select("#mapGroup").attr("transform",e.transform)});
+    d3.select(svgEl).transition().duration(600).call(z.transform,d3.zoomIdentity.translate(tx,ty).scale(scale));
   }
   showDetail(iso);
   d3.selectAll(".rank-row").classed("active",function(){return d3.select(this).datum().iso===iso});
