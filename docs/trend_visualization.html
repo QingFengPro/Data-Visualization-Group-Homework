@@ -15,8 +15,27 @@ h2{font-size:20px;font-weight:600;color:var(--c-primary);margin-bottom:4px}
 </head>
 <body>
 <div class="header"><h1>中国-中东欧合作发文量趋势 (2011–2020)</h1><p>柱状图: 中东欧合作发文量 | 折线: 占中国总发文量比例 | 虚线: 125/135 分界</p></div>
+
 <div class="chart-wrap">
 <div class="chart" id="chart"></div>
+</div>
+
+<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #4fc3f7;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px">🔍 关键年份标注</h3>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:11px;">
+    <div>
+      <strong style="color:#4fc3f7">▌ 2011-2015 年 (125 期间)</strong>
+      <p style="color:#666; margin:6px 0 0; line-height:1.6;">
+        合作起步阶段，论文总数从 1,046 篇增至 2,111 篇，占中国发文比例从 2.46% 升至 2.66%。此期间"一带一路"倡议(2013)为双边合作提供了战略契机。
+      </p>
+    </div>
+    <div>
+      <strong style="color:#7c4dff">▌ 2016-2020 年 (135 期间)</strong>
+      <p style="color:#666; margin:6px 0 0; line-height:1.6;">
+        合作稳步拓展阶段，论文总数从 2,533 篇增至 4,791 篇。特别是 2018-2020 年显现加速增长，2020 年达到十年峰值，说明政策支持与学术联系的持续深化。
+      </p>
+    </div>
+  </div>
 </div>
 <div class="tooltip" id="tooltip"></div>
 <script>
@@ -82,5 +101,34 @@ g.append("text").attr("x",x(2015)+x.bandwidth()/2).attr("y",-8).attr("text-ancho
 g.append("text").attr("x",-42).attr("y",-10).style("fill","#4fc3f7").style("font-size","11px").text("发文量");
 g.append("text").attr("x",iw+42).attr("y",-10).style("fill","#7c4dff").style("font-size","11px").style("text-anchor","end").text("占比");
 </script>
+
+<div style="background:#f0f5f9; padding:24px 30px; margin:20px; border-radius:12px; border-left:4px solid #00e5ff;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px">📈 十年合作核心指标</h3>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; font-size:11px; margin-bottom:18px;">
+    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #4fc3f7;">
+      <div style="font-size:18px; font-weight:800; color:#4fc3f7;">358%</div>
+      <div style="color:#666; margin-top:4px;">十年增幅<br/>(1,046→4,791 篇)</div>
+    </div>
+    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #7c4dff;">
+      <div style="font-size:18px; font-weight:800; color:#7c4dff;">18%</div>
+      <div style="color:#666; margin-top:4px;">125 期间年均增长率<br/>(2011-2015)</div>
+    </div>
+    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #00e5ff;">
+      <div style="font-size:18px; font-weight:800; color:#00e5ff;">3.16%</div>
+      <div style="color:#666; margin-top:4px;">2020 年占中国总发文比<br/>(上升自 2.46%)</div>
+    </div>
+  </div>
+  
+  <div style="padding:14px; background:#f0f5f9; border-radius:8px; border-left:4px solid #1a237e;">
+    <h4 style="font-size:13px; font-weight:700; color:#1a237e; margin-bottom:8px">💡 结论</h4>
+    <p style="font-size:12px; color:#555; line-height:1.7; margin:0;">
+      <strong>中国与中东欧学术合作随国际交流与政策推动持续深化、整体规模稳步扩容。</strong>
+      十年间合作发文量增长超 3.5 倍，占中国发文比例稳定在 2.5%-3.2% 之间，说明该地区已成为中国重要的学术合作伙伴。
+      2013 年"一带一路"倡议与 2015 年"中国-中东欧合作机制"的推出对学术合作的促进作用显著，
+      为今后继续深化合作奠定了坚实基础。
+    </p>
+  </div>
+</div>
+
 </body>
 </html>

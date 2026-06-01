@@ -20,10 +20,27 @@
 </head>
 <body>
 <div class="header"><h1>中东欧各国与我国合作发文量</h1><p>数据来源: Web of Science 125–135 | 点击条形查看国家简介</p></div>
+
+<div style="background:linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 20px 30px; margin: 0 20px 20px;">
+  <h2 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:10px">📊 页面说明</h2>
+  <p style="font-size:13px; color:#666; line-height:1.6; margin:0;">
+    本页展示中国与各中东欧国家在两个五年规划期间的学术合作规模及全球排名变化。
+    切换时间段可查看各国在 125 期间(2011-2015)和 135 期间(2016-2020)的合作表现，
+    以及两个时期间的增长变化。排名数据反映各国在全球学术交流体系中的地位。
+  </p>
+</div>
 <div class="controls">
   <button class="mode-btn active" data-mode="125">125 期间</button>
   <button class="mode-btn" data-mode="135">135 期间</button>
   <button class="mode-btn delta" data-mode="delta">变化 (125→135)</button>
+</div>
+
+<div style="background:#fff; border-bottom:1px solid #e8e8e8; padding: 16px 30px;">
+  <div style="max-width:1300px; margin:0 auto; font-size:11px; color:#666; line-height:1.6;">
+    <strong>梯队特征：</strong>波兰(3,252→7,195)、捷克(2,450→5,887)、希腊(2,086→5,063)构成"第一梯队"，合作规模远超其他国家。
+    匈牙利、罗马尼亚等为"第二梯队"，具有稳定的学术联系。其余国家虽合作量相对较小，但增长势头良好。
+    <strong>增长态势：</strong>大部分国家 125→135 期间实现两位数增长，体现了中东欧地区在中国学术外交中的战略地位提升。
+  </div>
 </div>
 <div class="main-container">
 <div class="chart-panel"><div class="chart-title" id="chartTitle">合作发文量及全球排名 — 125 期间</div><div id="barChart"></div></div>
@@ -106,5 +123,33 @@ d3.selectAll(".mode-btn").on("click",function(){currentMode=this.dataset.mode;d3
 
 drawChart();
 </script>
+
+<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #1a237e; max-width:1300px; margin-left:auto; margin-right:auto;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px">🔍 国别梯队分析</h3>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; font-size:11px;">
+    <div style="padding:12px; background:#fff; border-radius:6px; border-left:3px solid #ffd740;">
+      <strong style="color:#1a237e; display:block; margin-bottom:6px;">🥇 第一梯队 (3国)</strong>
+      <p style="color:#666; margin:0; line-height:1.6;">波兰、捷克、希腊。125 期间合作论文分别为 3,252、2,450、2,086 篇，均进入全球前 30 位。135 期间合作规模翻倍增长，成为中国学术交流的关键伙伴。</p>
+    </div>
+    <div style="padding:12px; background:#fff; border-radius:6px; border-left:3px solid #b0bec5;">
+      <strong style="color:#1a237e; display:block; margin-bottom:6px;">🥈 第二梯队 (5国)</strong>
+      <p style="color:#666; margin:0; line-height:1.6;">匈牙利、罗马尼亚、塞尔维亚、斯洛文尼亚、克罗地亚。合作规模 900-2,000 篇，全球排名 30-50 位。增长势头稳健，与中国学术联系深化。</p>
+    </div>
+    <div style="padding:12px; background:#fff; border-radius:6px; border-left:3px solid #bcaaa4;">
+      <strong style="color:#1a237e; display:block; margin-bottom:6px;">🥉 其他国家 (8国)</strong>
+      <p style="color:#666; margin:0; line-height:1.6;">斯洛伐克、保加利亚、爱沙尼亚、立陶宛、拉脱维亚等。虽合作规模相对较小(100-900 篇)，但多数实现了显著增长，合作潜力巨大。</p>
+    </div>
+  </div>
+</div>
+
+<div style="background:#fff; border-top:1px solid #e8e8e8; padding: 24px 30px; max-width:1300px; margin-left:auto; margin-right:auto;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">💡 主要发现</h3>
+  <ul style="font-size:12px; color:#666; line-height:1.8; margin:0; padding-left:20px;">
+    <li><strong>国别集聚效应明显：</strong>波兰、捷克、希腊三国的合作论文占总数的 50% 以上，体现了中东欧学术合作的不均衡分布。</li>
+    <li><strong>全体国家协同增长：</strong>17 国中全部实现了 125→135 期间的合作增长，说明合作扩展覆盖整个中东欧地区。</li>
+    <li><strong>中小国家合作潜力：</strong>爱沙尼亚、立陶宛等波罗的海三国虽基数小，但增长率达 80% 以上，未来合作空间值得期待。</li>
+  </ul>
+</div>
+
 </body>
 </html>

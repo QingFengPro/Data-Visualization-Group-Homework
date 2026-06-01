@@ -36,6 +36,13 @@
 </head>
 <body>
 <div class="header"><h1>中东欧国家合作论文地理分布</h1><p>蓝色越亮 = 合作论文越多 | 鼠标悬停查看详情</p></div>
+
+<div style="background:linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 16px 30px; margin: 0 20px 16px;">
+  <p style="font-size:13px; color:#666; line-height:1.6; margin:0;">
+    本地图展示中国与中东欧 16 国的合作论文在地理空间上的分布特征。通过颜色深浅直观呈现各国学术合作的相对规模，
+    图中标注的机构点位代表各国在此领域的学术重镇。可切换时间段(125/135/总体)和机构标签显示，深入了解地理格局变化。
+  </p>
+</div>
 <div class="controls">
   <button class="mode-btn active" data-mode="125">125 期间</button>
   <button class="mode-btn" data-mode="135">135 期间</button>
@@ -135,5 +142,26 @@ function zoomReset(){const el=document.querySelector("#mapChart svg");if(!el)ret
 function updateAll(){drawMap();drawRankList()}
 updateAll();
 </script>
+
+<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #1a237e; max-width:1500px; margin-left:auto; margin-right:auto;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">🗺️ 地理格局解读</h3>
+  <p style="font-size:12px; color:#666; line-height:1.7; margin:0 0 12px;">
+    从地理分布来看，<strong>中东欧学术合作呈现中心集聚、整体铺开的特点。</strong>
+    波兰、捷克、匈牙利、希腊等国作为中东欧的学术高地和地域中心，积累了最丰厚的合作基础。
+    与此同时，巴尔干地区(塞尔维亚、克罗地亚)、波罗的海三国(爱沙尼亚、立陶宛、拉脱维亚)等也获得了不同程度的合作拓展，
+    形成了"多极化"的合作格局，充分体现了中国对整个中东欧地区的学术辐射能力。
+  </p>
+  <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; font-size:12px;">
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:3px solid #4fc3f7;">
+      <strong style="color:#4fc3f7;">📍 地理中心</strong><br/>
+      波兰华沙、捷克布拉格、匈牙利布达佩斯等城市是中东欧学术中心，拥有最多的合作论文和学术机构参与。
+    </div>
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:3px solid #7c4dff;">
+      <strong style="color:#7c4dff;">📡 扩展阵线</strong><br/>
+      塞尔维亚、克罗地亚等巴尔干国家与波罗的海三国的合作虽基数较小，但增长活跃，代表了未来合作的拓展方向。
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

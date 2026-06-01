@@ -41,6 +41,13 @@
 </head>
 <body>
 <div class="header"><h1>合作机构排名对比</h1><p>基于完整明细数据 | 中国 Top 15 vs 中东欧 Top 15 | 含 125/135 分期排名</p></div>
+
+<div style="background:linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 16px 30px; margin: 0 20px 16px;">
+  <p style="font-size:13px; color:#666; line-height:1.6; margin:0;">
+    本页展示中国与中东欧学术合作的主要机构参与者。通过对比中国和中东欧各自的 Top 15 机构，
+    揭示机构层面的合作规模、排名变化与合作演进趋势。可切换不同时间段(125/135/总体/增长变化)观察机构合作动态。
+  </p>
+</div>
 <div class="stats-summary" id="statsSummary"></div>
 <div class="controls">
   <button class="mode-btn active" data-mode="total">总体 (125+135)</button>
@@ -179,5 +186,30 @@ d3.selectAll(".mode-btn").on("click",function(){
 
 renderAll();
 </script>
+
+<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #1a237e; max-width:1400px; margin-left:auto; margin-right:auto;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">🏛️ 机构合作格局</h3>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px; font-size:11px;">
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:3px solid #4fc3f7;">
+      <strong style="color:#4fc3f7; display:block; margin-bottom:6px;">中国侧特征</strong>
+      <p style="color:#666; margin:0; line-height:1.6;">
+        中科院系统(中科院、高能物理所)居于主导，代表中国的基础研究优势。
+        高校方面，清华、北大等名校崭露头角，反映了精英大学的国际合作活跃度。
+        125→135 期间，若干大学(如北航、科大)排名大幅提升，也显示青年高校的追赶势头。
+      </p>
+    </div>
+    <div style="padding:10px; background:#fff; border-radius:6px; border-left:3px solid #7c4dff;">
+      <strong style="color:#7c4dff; display:block; margin-bottom:6px;">中东欧侧特征</strong>
+      <p style="color:#666; margin:0; line-height:1.6;">
+        查理大学(捷克)、维格纳物理中心(匈牙利)、雅典大学(希腊)等代表地区学术高地。
+        各机构具有较强的专业特色(如高能物理、材料科学、医学)，形成了学科差异化的合作伙伴群。
+      </p>
+    </div>
+  </div>
+  <p style="font-size:13px; color:#666; line-height:1.7; margin:0;">
+    <strong>关键启示：</strong>机构层面的合作遵循"精英对接"模式，即中国的一流科研机构与中东欧的相应高地形成稳定联系。
+    这种模式保证了合作的高质量和深度，同时也为其他机构提供了合作示范。
+  </p>
+</div>
 </body>
 </html>

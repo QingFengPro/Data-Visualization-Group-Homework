@@ -36,6 +36,13 @@
 </head>
 <body>
 <div class="header"><h1>国家与学科合作关系可视化</h1></div>
+
+<div style="background:linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 16px 30px; margin: 0 20px 16px;">
+  <p style="font-size:13px; color:#666; line-height:1.6; margin:0;">
+    本页通过国别和学科两个维度，揭示了中国与中东欧学术合作的学科结构与国别特色。左侧饼图展示各国(或整体)的合作学科分布，下方雷达图按学科门类(理、工、医等12大类)展现各国的学术优势。
+    右侧网络图呈现学科间的关联关系，帮助识别关联的学科群体。
+  </p>
+</div>
 <div class="country-buttons" id="countryButtons"></div>
 <div class="main-layout">
 <div class="left-panel">
@@ -208,5 +215,22 @@ function updateAll(){drawDiscPie();drawCatPie();drawNetwork()}
 
 renderButtons();updateAll();
 </script>
+
+<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #1a237e;">
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">🔬 学科合作特征</h3>
+  <p style="font-size:12px; color:#666; line-height:1.7; margin:0 0 12px;">
+    <strong>学科集聚特征明显：</strong>中国与中东欧的学术合作高度集中在理学、工学、医学三大门类，占总合作论文的 80% 以上。
+    其中，物理学、化学、材料科学是第一层级高频合作学科，天文学、数学等基础学科也表现活跃。
+  </p>
+  <p style="font-size:12px; color:#666; line-height:1.7; margin:0 0 12px;">
+    <strong>国别学科差异：</strong>各中东欧国家虽共享理工医的整体框架，但学科偏好存在差异。
+    例如，波兰和捷克在物理学合作中尤为突出，而希腊在医学合作中权重更大。这种差异反映了各国的学科优势和研究特色。
+  </p>
+  <p style="font-size:12px; color:#666; line-height:1.7; margin:0;">
+    <strong>人文社科相对薄弱：</strong>经济学、管理学、哲学等人文社科合作占比普遍低于 5%，
+    说明中国与中东欧的学术合作仍主要聚焦于基础研究和应用科学领域，未来人文交流有充分拓展空间。
+  </p>
+</div>
+
 </body>
 </html>
