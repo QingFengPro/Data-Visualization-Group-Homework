@@ -72,7 +72,7 @@ function drawMap(){
   const allVals=Object.values(COUNTRY_DATA).map(d=>currentMode==="125"?d.papers_125:currentMode==="135"?d.papers_135:d.papers_sum);
   const maxVal=d3.max(allVals)||1;
 
-  const colorScale=d3.scaleSequential(d3.interpolateRgb("#0d2137","#ebf5fb")).domain([0,maxVal]);
+  const colorScale=d3.scaleSequential(d3.interpolateRgb("#e3f2fd","#1565c0")).domain([0,maxVal]);
 
   const mapG=svg.append("g").attr("id","mapGroup");
   mapG.append("rect").attr("width",w*3).attr("height",h*3).attr("x",-w).attr("y",-h).attr("fill","#e8f0f8");
@@ -118,7 +118,7 @@ function drawInstLabels(svg,proj,pathGen){
 function drawLegend(maxVal,cs){
   const lb=d3.select("#legendBox");lb.selectAll("*").remove();lb.append("div").attr("class","legend-title").text("论文数量");
   const svg=lb.append("svg").attr("width",240).attr("height",32);
-  const g=svg.append("defs").append("linearGradient").attr("id","mlg");g.append("stop").attr("offset","0%").attr("stop-color","#0d2137");g.append("stop").attr("offset","100%").attr("stop-color","#ebf5fb");
+  const g=svg.append("defs").append("linearGradient").attr("id","mlg");g.append("stop").attr("offset","0%").attr("stop-color","#e3f2fd");g.append("stop").attr("offset","100%").attr("stop-color","#1565c0");
   svg.append("rect").attr("x",0).attr("y",2).attr("width",180).attr("height",14).attr("rx",3).style("fill","url(#mlg)");
   for(let i=0;i<=4;i++){const v=Math.round(maxVal*i/4);svg.append("text").attr("x",180*i/4).attr("y",28).attr("text-anchor","middle").style("fill","#667").style("font-size","9px").text(v);}
 }

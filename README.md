@@ -95,14 +95,14 @@ uv run ./src/run_all.py
 │   └── discipline_correlation.py  # → discipline_graph.json（可选 AI 分析）
 │
 ├── docs/                          # 🌐 生成的可视化页面（GitHub Pages）
-│   ├── index.html                 # 统一导航外壳
+│   ├── index.html                 # 📋 概览页面
 │   ├── common.css                 # 公共样式
-│   ├── trend_visualization.html
-│   ├── cee_map_visualization.html
-│   ├── cee_bar_ranking.html
-│   ├── discipline_visualization.html
-│   ├── institution_visualization.html
-│   ├── radar_visualization.html
+│   ├── trend_visualization.html   # 📈 时间趋势页面
+│   ├── cee_map_visualization.html # 🗺️ 地理分布页面
+│   ├── cee_bar_ranking.html       # 📊 国家排名页面
+│   ├── discipline_visualization.html # 🥧 学科网络页面
+│   ├── institution_visualization.html # 🏛️ 机构排名页面
+│   ├── radar_visualization.html   # 📐 学科对比页面
 │   ├── discipline_graph.json      # 学科关联图数据
 │   └── .geo_cache.json            # GeoJSON 缓存（自动生成）
 │
