@@ -1,6 +1,6 @@
 """
 生成合作机构排名对比图：中国机构 Top15 vs 中东欧机构 Top15。
-数据源：使用完整明细文件（125/135 分别），而非截断的合并排名文件。
+数据源：使用 125-135 合并排名表（125/135 数据已在同一行匹配）。
 """
 import json, os
 import pandas as pd
@@ -12,97 +12,76 @@ from common import (
 
 write_common_css()
 
-# ── 读取中国机构完整明细 ──────────────────────────────────────
-df_cn125 = read_excel_safe(
-    os.path.join(DIR_INSTITUTION, "125中国机构.xlsx"),
-    description="125中国机构明细",
+def _safe_int(val):
+    """安全转 int，失败返回 0。"""
+    try:
+        return int(float(val))
+    except (ValueError, TypeError):
+        return 0
+
+# ── 读取中国机构 125-135 合并表 ──────────────────────────────────
+# 列: 135排名, 机构名, 135发文量, 占比, 125发文量, 增长率, 125排名, 位次变化
+df_cn = read_excel_safe(
+    os.path.join(DIR_INSTITUTION, "125-135中国机构所发合作文章数量.xlsx"),
+    description="125-135中国机构",
 )
-df_cn135 = read_excel_safe(
-    os.path.join(DIR_INSTITUTION, "135中国机构.xlsx"),
-    description="135中国机构明细",
-)
+cn_top = []
+for _, row in df_cn.iterrows():
+    name = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
+    if not name or name == "nan":
+        continue
+    p125 = _safe_int(row.iloc[4])
+    p135 = _safe_int(row.iloc[2])
+    rank_125 = _safe_int(row.iloc[6])
+    rank_135 = _safe_int(row.iloc[0])
+    rank_change = _safe_int(row.iloc[7]) if pd.notna(row.iloc[7]) else rank_125 - rank_135
+    cn_top.append({
+        "name": name, "name_en": "",
+        "p125": p125, "p135": p135,
+        "rank_total": 0,  # 后面重新计算
+        "rank_125": rank_125,
+        "rank_135": rank_135,
+        "rank_change": rank_change,
+        "delta": p135 - p125,
+    })
 
-cn_all = {}
-for _, row in df_cn125.iterrows():
-    en = str(row.iloc[0]).strip()
-    cn = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else en
-    cnt = int(row.iloc[2]) if pd.notna(row.iloc[2]) else 0
-    cn_all[cn] = {"name": cn, "name_en": en, "p125": cnt, "p135": 0}
-
-for _, row in df_cn135.iterrows():
-    en = str(row.iloc[0]).strip()
-    cn = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else en
-    cnt = int(row.iloc[2]) if pd.notna(row.iloc[2]) else 0
-    if cn in cn_all:
-        cn_all[cn]["p135"] = cnt
-    else:
-        cn_all[cn] = {"name": cn, "name_en": en, "p125": 0, "p135": cnt}
-
-cn_full = sorted(cn_all.values(), key=lambda x: x["p125"] + x["p135"], reverse=True)
-for i, inst in enumerate(cn_full):
+# 计算 rank_total
+cn_sorted = sorted(cn_top, key=lambda x: x["p125"] + x["p135"], reverse=True)
+for i, inst in enumerate(cn_sorted):
     inst["rank_total"] = i + 1
 
-cn_by_p125 = sorted(cn_full, key=lambda x: x["p125"], reverse=True)
-cn_by_p135 = sorted(cn_full, key=lambda x: x["p135"], reverse=True)
-for i, inst in enumerate(cn_by_p125):
-    inst["rank_125"] = i + 1
-for i, inst in enumerate(cn_by_p135):
-    inst["rank_135"] = i + 1
-for inst in cn_full:
-    inst["rank_change"] = inst["rank_125"] - inst["rank_135"]
-    inst["delta"] = inst["p135"] - inst["p125"]
-
-cn_top = cn_full[:15]
-
-# ── 读取中东欧机构完整明细 ──────────────────────────────────
-df_cee125 = read_excel_safe(
-    os.path.join(DIR_INSTITUTION, "125中东欧机构.xlsx"),
-    description="125中东欧机构明细",
+# ── 读取中东欧机构 125-135 合并表 ──────────────────────────────
+# 列: 135排名, 机构名, 国家, 135发文量, 占比, 125发文量, 占比, 125排名
+df_cee = read_excel_safe(
+    os.path.join(DIR_INSTITUTION, "125-135中东欧机构所发合作文章数量.xlsx"),
+    description="125-135中东欧机构",
 )
-df_cee135 = read_excel_safe(
-    os.path.join(DIR_INSTITUTION, "135中东欧机构.xlsx"),
-    description="135中东欧机构明细",
-)
+cee_top = []
+for _, row in df_cee.iterrows():
+    name = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
+    if not name or name == "nan":
+        continue
+    country = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else ""
+    p125 = _safe_int(row.iloc[5])
+    p135 = _safe_int(row.iloc[3])
+    rank_125 = _safe_int(row.iloc[7])
+    rank_135 = _safe_int(row.iloc[0])
+    rank_change = rank_125 - rank_135
+    cee_top.append({
+        "name": name, "name_en": "", "country": country,
+        "p125": p125, "p135": p135,
+        "rank_total": 0,
+        "rank_125": rank_125,
+        "rank_135": rank_135,
+        "rank_change": rank_change,
+        "delta": p135 - p125,
+    })
 
-cee_all = {}
-for _, row in df_cee125.iterrows():
-    en = str(row.iloc[1]).strip()
-    cn = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else en
-    cnt = int(row.iloc[3]) if pd.notna(row.iloc[3]) else 0
-    cty_en = str(row.iloc[5]).strip() if pd.notna(row.iloc[5]) else ""
-    cty_cn = CEE_EXACT.get(cty_en.upper(), cty_en)
-    cee_all[en] = {"name": cn, "name_en": en, "country": cty_cn, "p125": cnt, "p135": 0}
-
-for _, row in df_cee135.iterrows():
-    en = str(row.iloc[1]).strip()
-    cn = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else en
-    cnt = int(row.iloc[3]) if pd.notna(row.iloc[3]) else 0
-    cty_en = str(row.iloc[5]).strip() if pd.notna(row.iloc[5]) else ""
-    cty_cn = row.iloc[6] if len(row) > 6 and pd.notna(row.iloc[6]) else CEE_EXACT.get(cty_en.upper(), cty_en)
-    if en in cee_all:
-        cee_all[en]["p135"] = cnt
-    else:
-        cee_all[en] = {"name": cn, "name_en": en, "country": str(cty_cn), "p125": 0, "p135": cnt}
-
-cee_full = sorted(cee_all.values(), key=lambda x: x["p125"] + x["p135"], reverse=True)
-for i, inst in enumerate(cee_full):
+cee_sorted = sorted(cee_top, key=lambda x: x["p125"] + x["p135"], reverse=True)
+for i, inst in enumerate(cee_sorted):
     inst["rank_total"] = i + 1
 
-cee_by_p125 = sorted(cee_full, key=lambda x: x["p125"], reverse=True)
-cee_by_p135 = sorted(cee_full, key=lambda x: x["p135"], reverse=True)
-for i, inst in enumerate(cee_by_p125):
-    inst["rank_125"] = i + 1
-for i, inst in enumerate(cee_by_p135):
-    inst["rank_135"] = i + 1
-for inst in cee_full:
-    inst["rank_change"] = inst["rank_125"] - inst["rank_135"]
-    inst["delta"] = inst["p135"] - inst["p125"]
-
-cee_top = cee_full[:15]
-
-print(f"CN institutions (full): {len(cn_full)}, CEE institutions (full): {len(cee_full)}")
-print(f"CN top 15: {[d['name'] for d in cn_top]}")
-print(f"CEE top 15: {[d['name'] for d in cee_top]}")
+print(f"CN institutions: {len(cn_top)}, CEE institutions: {len(cee_top)}")
 
 html = r"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -266,12 +245,17 @@ function drawPanel(containerId, data, accentColor, showCountry){
 function renderAll(){
   var modeLabels={"total":"125+135","125":"125","135":"135","delta":"变化量 (125→135)"};
   var isDelta=currentMode==="delta";
-  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 共 "+CN.length+" 个");
-  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 共 "+CEE.length+" 个");
+
+  // 按当前模式动态选取 Top 15
+  var cnTop15=[...CN].sort((a,b)=>getVal(b)-getVal(a)).slice(0,15);
+  var ceeTop15=[...CEE].sort((a,b)=>getVal(b)-getVal(a)).slice(0,15);
+
+  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 候选池 "+CN.length+" 个");
+  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 候选池 "+CEE.length+" 个");
   var cnColor=isDelta?"#69f0ae":"#4fc3f7";
   var ceeColor=isDelta?"#69f0ae":"#7c4dff";
-  drawPanel("chartCN", CN, cnColor, false);
-  drawPanel("chartCEE", CEE, ceeColor, true);
+  drawPanel("chartCN", cnTop15, cnColor, false);
+  drawPanel("chartCEE", ceeTop15, ceeColor, true);
 }
 
 d3.selectAll(".mode-btn").on("click",function(){
@@ -291,5 +275,5 @@ renderAll();
 html = html.replace("__CN_DATA__", json.dumps(cn_top, ensure_ascii=False))
 html = html.replace("__CEE_DATA__", json.dumps(cee_top, ensure_ascii=False))
 write_html(os.path.join(OUTPUT_DIR, "institution_visualization.html"), html, "机构排名")
-print(f"  中国机构 Top 15: {len(cn_top)}, 中东欧机构 Top 15: {len(cee_top)}")
+print(f"  中国机构(候选池): {len(cn_top)}, 中东欧机构(候选池): {len(cee_top)}")
 print("Done.")

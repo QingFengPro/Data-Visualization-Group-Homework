@@ -26,12 +26,14 @@
 .network-container{width:100%;height:680px;border:1px solid #eee;border-radius:8px;background:#fafafa}
 .info-bar{display:flex;gap:14px;padding:0 0 8px;font-size:11px;color:#bbb;flex-wrap:wrap;align-items:center}
 .info-bar span{background:#fafafa;padding:2px 10px;border-radius:10px}
+.network-legend{display:flex;flex-wrap:wrap;gap:4px 10px;padding:4px 0;font-size:10px;color:#999;align-items:center}
+.network-legend .leg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:2px;flex-shrink:0}
 .toolbar{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .search-input{padding:5px 12px;border:1.5px solid #e0e0e0;border-radius:16px;font-size:11px;width:160px;outline:none;background:#fafafa;color:#666;transition:border-color 0.2s}
 .search-input:focus{border-color:var(--c-primary)}
 .search-input::placeholder{color:#bbb}
-.hl-node circle{stroke:var(--c-blue)!important;stroke-width:3.5!important;filter:drop-shadow(0 0 6px rgba(79,195,247,0.5))}
-.hl-node text{fill:var(--c-blue)!important;font-weight:800!important}
+.hl-node circle{stroke:#333!important;stroke-width:3.5!important;filter:drop-shadow(0 0 10px rgba(0,0,0,0.4))}
+.hl-node text{fill:#111!important;font-weight:800!important}
 </style>
 </head>
 <body>
@@ -52,6 +54,7 @@
 <div class="network-block network-panel">
 <div class="panel-title">学科关联网络</div>
 <div class="toolbar"><input class="search-input" type="text" id="searchInput" placeholder="🔍 搜索学科…" oninput="onSearch(this.value)"/></div>
+<div class="network-legend" id="networkLegend"></div>
 <div class="info-bar" id="infoBar"></div>
 <div class="network-container" id="networkChart"></div>
 </div>
@@ -160,43 +163,126 @@ function drawNetwork(){
   const w=d3.select("#networkChart").node().clientWidth, h=650;
   const svg=d3.select("#networkChart").append("svg").attr("width",w).attr("height",h);
   const papers=data.papers;
+
+  // ── 确定展示的学科节点 (top11 及其邻居) ──
   let entries=Object.entries(papers).filter(d=>d[1]>0);entries.sort((a,b)=>b[1]-a[1]);
   const top11=new Set(entries.slice(0,11).map(d=>d[0]));
   const paperDiscs=new Set(Object.keys(papers).filter(k=>papers[k]>0));
-  const connected=new Set(top11);const adj={};
+  const adj={};
   for(const e of GRAPH_EDGES){if(!adj[e.source])adj[e.source]=new Set();if(!adj[e.target])adj[e.target]=new Set();adj[e.source].add(e.target);adj[e.target].add(e.source)}
+  const connected=new Set(top11);
   for(const n of top11){if(adj[n])for(const nb of adj[n]){if(paperDiscs.has(nb))connected.add(nb)}}
-  const es=new Set(),el=[];for(const e of GRAPH_EDGES){if(connected.has(e.source)&&connected.has(e.target)){const k=[e.source,e.target].sort().join("|||");if(!es.has(k)){es.add(k);el.push({source:e.source,target:e.target,relation:e.relation})}}}
-  netNodes=[];const nm={};let ci=0;
-  for(const n of connected){if(papers[n]!==undefined){const isT=top11.has(n);netNodes.push({id:n,papers:papers[n],isTop11:isT,color:isT?["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80"][ci++%11]:"#aaa"});nm[n]=netNodes[netNodes.length-1]}}
+
+  // ── 按大类给节点着色 ──
+  netNodes=[];const nm={};
+  for(const n of connected){
+    if(papers[n]!==undefined){
+      const cat=DISC_CAT[n]||"未分类";
+      const color=CAT_COLORS[cat]||"#999";
+      netNodes.push({id:n, papers:papers[n], isTop11:top11.has(n), cat, color});
+      nm[n]=netNodes[netNodes.length-1];
+    }
+  }
+
+  // ── 边集合 ──
+  const es=new Set(),el=[];
+  for(const e of GRAPH_EDGES){
+    if(connected.has(e.source)&&connected.has(e.target)){
+      const k=[e.source,e.target].sort().join("|||");
+      if(!es.has(k)){es.add(k);el.push({source:e.source,target:e.target,relation:e.relation})}
+    }
+  }
   netEdges=el.filter(e=>nm[e.source]&&nm[e.target]);
 
-  const rS=d3.scaleSqrt().domain([1,d3.max(netNodes,d=>d.papers)||1]).range([7,45]);
-  const sim=d3.forceSimulation(netNodes).force("link",d3.forceLink(netEdges).id(d=>d.id).distance(90).strength(0.35)).force("charge",d3.forceManyBody().strength(-320)).force("center",d3.forceCenter(w/2,h/2)).force("collision",d3.forceCollide().radius(d=>rS(d.papers)+4));
+  // ── 节点半径比例尺 ──
+  const rS=d3.scaleSqrt().domain([1,d3.max(netNodes,d=>d.papers)||1]).range([6,42]);
+
+  // ── 为每个大类计算固定引力中心 (环形分布) ──
+  const catsInView=[...new Set(netNodes.map(d=>d.cat))];
+  const catCenters={};
+  const cx=w/2, cy=h/2, ringR=Math.min(w,h)*0.32;
+  catsInView.forEach((cat,i)=>{
+    const angle=(i/catsInView.length)*2*Math.PI - Math.PI/2;
+    catCenters[cat]={x:cx+ringR*Math.cos(angle), y:cy+ringR*Math.sin(angle)};
+  });
+
+  // ── 力导向布局 (大类引力中心 + 连线 + 碰撞) ──
+  const sim=d3.forceSimulation(netNodes)
+    .force("link",d3.forceLink(netEdges).id(d=>d.id).distance(d=>{
+      const scat=DISC_CAT[d.source.id]||"", tcat=DISC_CAT[d.target.id]||"";
+      return scat===tcat?55:90;
+    }).strength(0.25))
+    .force("charge",d3.forceManyBody().strength(d=>-160-Math.sqrt(d.papers)*3))
+    .force("collision",d3.forceCollide().radius(d=>rS(d.papers)+6))
+    // 按大类引力：同色节点聚到同一区域
+    .force("x",d3.forceX(d=>catCenters[d.cat]?.x||cx).strength(0.12))
+    .force("y",d3.forceY(d=>catCenters[d.cat]?.y||cy).strength(0.12));
 
   const zg=svg.append("g");
-  let eci=0;
 
+  // ── 边 ──
   const link=zg.append("g").selectAll("line").data(netEdges).join("line")
-    .attr("stroke",d=>{const b=top11.has(d.source)&&top11.has(d.target);return b?["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80"][(eci++)%11]:"#eee"})
-    .attr("stroke-width",d=>top11.has(d.source)&&top11.has(d.target)?2:1.2)
-    .attr("opacity",d=>top11.has(d.source)&&top11.has(d.target)?0.85:0.7);
+    .attr("stroke",d=>{
+      const sc=DISC_CAT[d.source.id]||"", tc=DISC_CAT[d.target.id]||"";
+      if(sc===tc&&CAT_COLORS[sc])return CAT_COLORS[sc]+"55"; // 同大类用该大类颜色半透明
+      return "#e0e0e0"; // 跨大类灰色
+    })
+    .attr("stroke-width",d=>top11.has(d.source.id)&&top11.has(d.target.id)?2.2:1)
+    .attr("opacity",d=>top11.has(d.source.id)&&top11.has(d.target.id)?0.75:0.5);
 
+  // ── 节点组 ──
   const node=zg.append("g").selectAll("g").data(netNodes).join("g")
     .attr("class",d=>"net-node nn-"+d.id.replace(/\s/g,"_"))
-    .call(d3.drag().on("start",(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y}).on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y}).on("end",(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
+    .call(d3.drag()
+      .on("start",(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y})
+      .on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y})
+      .on("end",(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
 
-  node.append("circle").attr("r",d=>rS(d.papers)).attr("fill",d=>d.color).attr("stroke",d=>d.isTop11?"#999":"#bbb").attr("stroke-width",d=>d.isTop11?2:1).attr("opacity",0.88)
-    .on("mouseenter",function(e,d){d3.select(this).attr("opacity",1).attr("stroke-width",3).attr("stroke","#fff").style("filter","drop-shadow(0 0 8px "+d.color+")");showTooltip(e,`<b>${d.id}</b><br>合作论文: ${d.papers} 篇${d.isTop11?" (前11)":""}`)})
-    .on("mouseleave",function(e,d){d3.select(this).attr("opacity",0.88).attr("stroke-width",d.isTop11?2:1).attr("stroke",d.isTop11?"#999":"#f5f5f5").style("filter","none");hideTooltip()});
+  // ── 节点圆 ──
+  node.append("circle")
+    .attr("r",d=>rS(d.papers))
+    .attr("fill",d=>d.color)
+    .attr("stroke","#fff")
+    .attr("stroke-width",d=>d.isTop11?2.5:1.2)
+    .attr("opacity",0.9)
+    .on("mouseenter",function(e,d){
+      d3.select(this).attr("opacity",1).attr("stroke-width",4).attr("stroke","#333")
+        .style("filter","drop-shadow(0 0 10px "+d.color+")");
+      showTooltip(e,`<b>${d.id}</b><br>门类: ${d.cat}<br>合作论文: ${d.papers} 篇${d.isTop11?" (前11)":""}`);
+    })
+    .on("mouseleave",function(e,d){
+      d3.select(this).attr("opacity",0.9).attr("stroke-width",d.isTop11?2.5:1.2).attr("stroke","#fff")
+        .style("filter","none");
+      hideTooltip();
+    });
 
-  node.append("text").text(d=>d.id).attr("class",d=>"nlbl nl-"+d.id.replace(/\s/g,"_"))
+  // ── 节点标签 ──
+  node.append("text").text(d=>d.id)
+    .attr("class",d=>"nlbl nl-"+d.id.replace(/\s/g,"_"))
     .attr("dx",d=>rS(d.papers)+5).attr("dy",4)
-    .style("font-size",d=>d.isTop11?"11px":"9px").style("font-weight",d=>d.isTop11?"600":"400")
-    .style("fill",d=>d.isTop11?"#333":"#555").style("pointer-events","none");
+    .style("font-size",d=>d.isTop11?"11px":"9px")
+    .style("font-weight",d=>d.isTop11?"700":"400")
+    .style("fill",d=>d.isTop11?"#222":"#666")
+    .style("pointer-events","none");
 
-  sim.on("tick",()=>{link.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);node.attr("transform",d=>`translate(${d.x},${d.y})`)});
-  d3.select("#infoBar").html(`<span>数据源: ${data.name}</span><span>显示学科: ${netNodes.length}</span><span>关联边: ${netEdges.length}</span>`);
+  // ── tick: 更新位置并在稳定后固定 ──
+  sim.on("tick",()=>{
+    link.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
+      .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+    node.attr("transform",d=>`translate(${d.x},${d.y})`);
+  }).on("end",()=>{
+    // 模拟结束后固定所有节点位置
+    netNodes.forEach(d=>{d.fx=d.x;d.fy=d.y});
+  });
+
+  // ── 图例 ──
+  const catsSet=new Set(catsInView);
+  const catEntries=CAT_ORDER.filter(c=>catsSet.has(c)).map(c=>({cat:c,color:CAT_COLORS[c]||"#999"}));
+  d3.select("#networkLegend").html(
+    catEntries.map(c=>`<span><span class="leg-dot" style="background:${c.color}"></span>${c.cat}</span>`).join("")
+  );
+
+  d3.select("#infoBar").html(`<span>数据源: ${data.name}</span><span>学科节点: ${netNodes.length}</span><span>关联边: ${netEdges.length}</span>`);
   svg.call(d3.zoom().scaleExtent([0.3,4]).on("zoom",(e)=>{zg.attr("transform",e.transform)}));
   if(searchTerm)applySearch(searchTerm);
 }
@@ -217,14 +303,14 @@ renderButtons();updateAll();
 </script>
 
 <div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #1a237e;">
-  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">🔬 学科合作特征</h3>
+  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px;">学科合作特征</h3>
   <p style="font-size:12px; color:#666; line-height:1.7; margin:0 0 12px;">
-    <strong>学科集聚特征明显：</strong>中国与中东欧的学术合作高度集中在理学、工学、医学三大门类，占总合作论文的 80% 以上。
-    其中，物理学、化学、材料科学是第一层级高频合作学科，天文学、数学等基础学科也表现活跃。
+    <strong>学科聚集特征明显：</strong>中国与中东欧的学术合作高度集中在理学、工学、医学三大门类，占总合作论文的 80% 以上。
+    其中，物理学、化学、材料科学是最高频的几个合作学科，天文学、数学等基础学科也表现活跃。
   </p>
   <p style="font-size:12px; color:#666; line-height:1.7; margin:0 0 12px;">
-    <strong>国别学科差异：</strong>各中东欧国家虽共享理工医的整体框架，但学科偏好存在差异。
-    例如，波兰和捷克在物理学合作中尤为突出，而希腊在医学合作中权重更大。这种差异反映了各国的学科优势和研究特色。
+    <strong>国别学科差异：</strong>各中东欧国家虽整体聚焦理工医类合作，但学科偏好存在差异。
+    例如，波兰和捷克在物理学合作中尤为突出，而希腊在医学合作中权重更大。这种差异也反映了各国的学科优势和研究特色。
   </p>
   <p style="font-size:12px; color:#666; line-height:1.7; margin:0;">
     <strong>人文社科相对薄弱：</strong>经济学、管理学、哲学等人文社科合作占比普遍低于 5%，

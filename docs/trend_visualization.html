@@ -20,23 +20,7 @@ h2{font-size:20px;font-weight:600;color:var(--c-primary);margin-bottom:4px}
 <div class="chart" id="chart"></div>
 </div>
 
-<div style="background:#f0f5f9; padding: 24px 30px; margin: 20px; border-radius:12px; border-left:4px solid #4fc3f7;">
-  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px">🔍 关键年份标注</h3>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:11px;">
-    <div>
-      <strong style="color:#4fc3f7">▌ 2011-2015 年 (125 期间)</strong>
-      <p style="color:#666; margin:6px 0 0; line-height:1.6;">
-        合作起步阶段，论文总数从 1,046 篇增至 2,111 篇，占中国发文比例从 2.46% 升至 2.66%。此期间"一带一路"倡议(2013)为双边合作提供了战略契机。
-      </p>
-    </div>
-    <div>
-      <strong style="color:#7c4dff">▌ 2016-2020 年 (135 期间)</strong>
-      <p style="color:#666; margin:6px 0 0; line-height:1.6;">
-        合作稳步拓展阶段，论文总数从 2,533 篇增至 4,791 篇。特别是 2018-2020 年显现加速增长，2020 年达到十年峰值，说明政策支持与学术联系的持续深化。
-      </p>
-    </div>
-  </div>
-</div>
+
 <div class="tooltip" id="tooltip"></div>
 <script>
 const DATA = [{"year": 2011, "cee": 1046, "china": 42487, "ratio": 2.46}, {"year": 2012, "cee": 1367, "china": 48536, "ratio": 2.82}, {"year": 2013, "cee": 1610, "china": 57879, "ratio": 2.78}, {"year": 2014, "cee": 1843, "china": 68646, "ratio": 2.68}, {"year": 2015, "cee": 2111, "china": 79401, "ratio": 2.66}, {"year": 2016, "cee": 2533, "china": 91862, "ratio": 2.76}, {"year": 2017, "cee": 2782, "china": 104021, "ratio": 2.67}, {"year": 2018, "cee": 3342, "china": 119825, "ratio": 2.79}, {"year": 2019, "cee": 4260, "china": 141889, "ratio": 3.0}, {"year": 2020, "cee": 4791, "china": 151785, "ratio": 3.16}];
@@ -102,32 +86,30 @@ g.append("text").attr("x",-42).attr("y",-10).style("fill","#4fc3f7").style("font
 g.append("text").attr("x",iw+42).attr("y",-10).style("fill","#7c4dff").style("font-size","11px").style("text-anchor","end").text("占比");
 </script>
 
-<div style="background:#f0f5f9; padding:24px 30px; margin:20px; border-radius:12px; border-left:4px solid #00e5ff;">
-  <h3 style="font-size:14px; font-weight:700; color:#1a237e; margin-bottom:12px">📈 十年合作核心指标</h3>
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; font-size:11px; margin-bottom:18px;">
-    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #4fc3f7;">
-      <div style="font-size:18px; font-weight:800; color:#4fc3f7;">358%</div>
-      <div style="color:#666; margin-top:4px;">十年增幅<br/>(1,046→4,791 篇)</div>
+<div style="background:#f0f5f9; padding:32px 28px; margin:20px auto; border-radius:12px; border-left:4px solid #1a237e; max-width:900px; width:95%;">
+  <h3 style="font-size:16px; font-weight:700; color:#1a237e; margin-bottom:20px">重点指标</h3>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px;">
+    <div style="padding:20px; background:#fff; border-radius:8px; border-left:4px solid #4fc3f7; text-align:center;">
+      <div style="font-size:32px; font-weight:800; color:#4fc3f7;">358%</div>
+      <div style="color:#666; margin-top:8px; font-size:12px; line-height:1.6;">十年增幅<br/>(1,046 → 4,791 篇)</div>
     </div>
-    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #7c4dff;">
-      <div style="font-size:18px; font-weight:800; color:#7c4dff;">18%</div>
-      <div style="color:#666; margin-top:4px;">125 期间年均增长率<br/>(2011-2015)</div>
+    <div style="padding:20px; background:#fff; border-radius:8px; border-left:4px solid #7c4dff; text-align:center;">
+      <div style="font-size:32px; font-weight:800; color:#7c4dff;">18%</div>
+      <div style="color:#666; margin-top:8px; font-size:12px; line-height:1.6;">125期间年均增长率<br/>(2011-2015)</div>
     </div>
-    <div style="padding:14px; background:#f5f7fa; border-radius:8px; border-left:3px solid #00e5ff;">
-      <div style="font-size:18px; font-weight:800; color:#00e5ff;">3.16%</div>
-      <div style="color:#666; margin-top:4px;">2020 年占中国总发文比<br/>(上升自 2.46%)</div>
+    <div style="padding:20px; background:#fff; border-radius:8px; border-left:4px solid #00e5ff; text-align:center;">
+      <div style="font-size:32px; font-weight:800; color:#00e5ff;">3.16%</div>
+      <div style="color:#666; margin-top:8px; font-size:12px; line-height:1.6;">2020年占中国总发文比<br/>(上升自2.46%)</div>
     </div>
   </div>
-  
-  <div style="padding:14px; background:#f0f5f9; border-radius:8px; border-left:4px solid #1a237e;">
-    <h4 style="font-size:13px; font-weight:700; color:#1a237e; margin-bottom:8px">💡 结论</h4>
-    <p style="font-size:12px; color:#555; line-height:1.7; margin:0;">
-      <strong>中国与中东欧学术合作随国际交流与政策推动持续深化、整体规模稳步扩容。</strong>
-      十年间合作发文量增长超 3.5 倍，占中国发文比例稳定在 2.5%-3.2% 之间，说明该地区已成为中国重要的学术合作伙伴。
-      2013 年"一带一路"倡议与 2015 年"中国-中东欧合作机制"的推出对学术合作的促进作用显著，
-      为今后继续深化合作奠定了坚实基础。
-    </p>
-  </div>
+
+  <h4 style="font-size:16px; font-weight:700; color:#1a237e; margin:24px 0 12px; border-top:1px solid #ddd; padding-top:20px;">趋势分析</h4>
+  <p style="font-size:13px; color:#333; line-height:1.8; margin:0;">
+    <strong>中国与中东欧学术合作随国际交流与政策推动持续深化，整体规模稳步扩容。</strong>
+    十年间合作发文量增长超3.5倍，占中国发文比例稳定在2.5%-3.2%之间，说明该地区已成为中国重要的学术合作伙伴。 
+    2013年"一带一路"倡议与2015年"中国-中东欧合作机制"的推出对学术合作的促进作用显著， 
+    为今后继续深化合作奠定了坚实基础。
+  </p>
 </div>
 
 </body>
