@@ -167,14 +167,17 @@ function drawPanel(containerId, data, accentColor, showCountry){
 function renderAll(){
   var modeLabels={"total":"125+135","125":"125","135":"135","delta":"变化量 (125→135)"};
   var isDelta=currentMode==="delta";
-  var cnFiltered=filterData(CN);
-  var ceeFiltered=filterData(CEE);
-  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 共 "+cnFiltered.length+" 个");
-  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 共 "+ceeFiltered.length+" 个");
+
+  // 按当前模式动态选取 Top 15
+  var cnTop15=[...CN].sort((a,b)=>getVal(b)-getVal(a)).slice(0,15);
+  var ceeTop15=[...CEE].sort((a,b)=>getVal(b)-getVal(a)).slice(0,15);
+
+  d3.select("#subCN").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"Top 15 · 候选池 "+CN.length+" 个");
+  d3.select("#subCEE").text((isDelta?"按变化量排序 | ":"按 "+modeLabels[currentMode]+" 排序 | ")+"含国别 | Top 15 · 候选池 "+CEE.length+" 个");
   var cnColor=isDelta?"#69f0ae":"#4fc3f7";
   var ceeColor=isDelta?"#69f0ae":"#7c4dff";
-  drawPanel("chartCN", CN, cnColor, false);
-  drawPanel("chartCEE", CEE, ceeColor, true);
+  drawPanel("chartCN", cnTop15, cnColor, false);
+  drawPanel("chartCEE", ceeTop15, ceeColor, true);
 }
 
 d3.selectAll(".mode-btn").on("click",function(){

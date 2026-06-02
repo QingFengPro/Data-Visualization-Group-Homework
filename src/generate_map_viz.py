@@ -32,8 +32,6 @@ for _, row in df.iterrows():
             "papers_125": p125,
             "papers_135": p135,
             "papers_sum": p125 + p135,
-            "delta": p135 - p125,
-            "delta_pct": round((p135 - p125) / p125 * 100, 1) if p125 > 0 else 0,
         }
 print(f"Matched countries from Excel: {len(country_data)}")
 
@@ -260,13 +258,15 @@ function showDetail(iso){
   const d=COUNTRY_DATA[iso];if(!d)return;
   const panel=d3.select("#detailPanel");panel.classed("visible",true);
   d3.select("#detailTitle").text(d.name_cn);
-  const deltaColor=d.delta>=0?"up":"down";
-  const deltaSign=d.delta>=0?"+":"";
+  const delta = d.papers_135 - d.papers_125;
+  const delta_pct = d.papers_125 > 0 ? ((delta / d.papers_125) * 100).toFixed(1) : 0;
+  const deltaColor=delta>=0?"up":"down";
+  const deltaSign=delta>=0?"+":"";
   d3.select("#detailGrid").html(`
     <div class="detail-item"><div class="detail-num">${d.papers_125.toLocaleString()}</div><div class="detail-label">125 期间</div></div>
     <div class="detail-item"><div class="detail-num">${d.papers_135.toLocaleString()}</div><div class="detail-label">135 期间</div></div>
     <div class="detail-item"><div class="detail-num">${d.papers_sum.toLocaleString()}</div><div class="detail-label">合计</div></div>
-    <div class="detail-item"><div class="detail-delta ${deltaColor}">${deltaSign}${d.delta.toLocaleString()}</div><div class="detail-label">变化 (${d.delta_pct}%)</div></div>
+    <div class="detail-item"><div class="detail-delta ${deltaColor}">${deltaSign}${delta.toLocaleString()}</div><div class="detail-label">变化 (${delta_pct}%)</div></div>
   `);
   const insts=INSTITUTIONS.filter(i=>i.country_iso===iso).sort((a,b)=>b.papers_sum-a.papers_sum).slice(0,5);
   const instTotal=d3.sum(insts,i=>i.papers_sum);
@@ -314,17 +314,18 @@ function drawMap(){
     .style("pointer-events","none").text(d=>d.properties.display_name||d.properties.iso);
 
   // Delta bars
-  const maxDelta=d3.max(Object.values(COUNTRY_DATA),d=>Math.abs(d.delta))||1;
+  const maxDelta=d3.max(Object.values(COUNTRY_DATA),d=>Math.abs(d.papers_135-d.papers_125))||1;
   const deltaScale=d3.scaleLinear().domain([-maxDelta,maxDelta]).range([-60,60]);
   const fMap={};GEO_JSON.features.forEach(f=>{const iso=f.properties.iso;if(iso&&COUNTRY_DATA[iso])fMap[iso]=f});
   Object.entries(COUNTRY_DATA).forEach(([iso,d])=>{
     const feat=fMap[iso];if(!feat)return;
     const [cx,cy]=pathGen.centroid(feat);
-    const barW=deltaScale(d.delta)-deltaScale(0);
+    const dd=d.papers_135-d.papers_125;
+    const barW=deltaScale(dd)-deltaScale(0);
     mapG.append("line")
-      .attr("x1",cx+(d.delta>=0?0:barW)).attr("y1",cy+18)
-      .attr("x2",cx+(d.delta>=0?barW:0)).attr("y2",cy+18)
-      .attr("stroke",d.delta>=0?"#69f0ae":"#ff6e40")
+      .attr("x1",cx+(dd>=0?0:barW)).attr("y1",cy+18)
+      .attr("x2",cx+(dd>=0?barW:0)).attr("y2",cy+18)
+      .attr("stroke",dd>=0?"#69f0ae":"#ff6e40")
       .attr("stroke-width",3).attr("class","delta-bar").attr("opacity",0.85);
     mapG.append("circle").attr("cx",cx).attr("cy",cy+18).attr("r",2.5).attr("fill","#fff").attr("stroke","#999").attr("stroke-width",0.5);
   });

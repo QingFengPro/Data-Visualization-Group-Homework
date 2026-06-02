@@ -212,7 +212,7 @@ function drawNetwork(){
   for(const e of GRAPH_EDGES){if(!adj[e.source])adj[e.source]=new Set();if(!adj[e.target])adj[e.target]=new Set();adj[e.source].add(e.target);adj[e.target].add(e.source)}
   for(const n of top11){if(adj[n])for(const nb of adj[n]){if(paperDiscs.has(nb))connected.add(nb)}}
   const es=new Set(),el=[];for(const e of GRAPH_EDGES){if(connected.has(e.source)&&connected.has(e.target)){const k=[e.source,e.target].sort().join("|||");if(!es.has(k)){es.add(k);el.push({source:e.source,target:e.target,relation:e.relation})}}}
-  netNodes=[];const nm={};
+  netNodes=[];const nm={};let ci=0;
   for(const n of connected){if(papers[n]!==undefined){const isT=top11.has(n);const cat=DISC_CAT[n]||"未分类";const catGroup=cat==="理学"?"理学类":cat==="工学"?"工学类":cat==="医学"?"医学类":cat==="农学"?"农学类":["哲学","经济学","法学","教育学","文学","历史学","管理学","艺术学"].includes(cat)?"人文社科类":"其他";const nodeColor=LEGEND_COLORS[catGroup]||"#aaa";netNodes.push({id:n,papers:papers[n],isTop11:isT,color:nodeColor,catGroup:catGroup});nm[n]=netNodes[netNodes.length-1]}}
   netEdges=el.filter(e=>nm[e.source]&&nm[e.target]);
 
@@ -223,16 +223,16 @@ function drawNetwork(){
   let eci=0;
 
   const link=zg.append("g").selectAll("line").data(netEdges).join("line")
-    .attr("stroke","#ccc")
-    .attr("stroke-width",1.5)
-    .attr("opacity",0.6);
+    .attr("stroke",d=>{const b=top11.has(d.source)&&top11.has(d.target);return b?["#4fc3f7","#7c4dff","#00e5ff","#ff6e40","#69f0ae","#ffd740","#ff4081","#40c4ff","#b388ff","#84ffff","#ff8a80"][(eci++)%11]:"#eee"})
+    .attr("stroke-width",d=>top11.has(d.source)&&top11.has(d.target)?2:1.2)
+    .attr("opacity",d=>top11.has(d.source)&&top11.has(d.target)?0.85:0.7);
 
   const node=zg.append("g").selectAll("g").data(netNodes).join("g")
     .attr("class",d=>"net-node nn-"+d.id.replace(/\s/g,"_"))
     .call(d3.drag().on("start",(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y}).on("drag",(e,d)=>{d.fx=e.x;d.fy=e.y}).on("end",(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
 
   node.append("circle").attr("r",d=>rS(d.papers)).attr("fill",d=>d.color).attr("stroke",d=>d.isTop11?"#999":"#bbb").attr("stroke-width",d=>d.isTop11?2:1).attr("opacity",0.88)
-    .on("mouseenter",function(e,d){d3.select(this).attr("opacity",1).attr("stroke-width",3).attr("stroke","#fff").style("filter","drop-shadow(0 0 8px "+d.color+")");showTooltip(e,`<b>${d.id}</b><br>合作论文: ${d.papers} 篇${d.isTop11?" (前11)":""}`)})
+    .on("mouseenter",function(e,d){d3.select(this).attr("opacity",1).attr("stroke-width",3).attr("stroke","#fff").style("filter","drop-shadow(0 0 8px "+d.color+")");showTooltip(e,`<b>${d.id}</b><br>合作论文: ${d.papers} 篇${d.isTop11?" (前11)":""}<br>门类: ${d.catGroup}`)})
     .on("mouseleave",function(e,d){d3.select(this).attr("opacity",0.88).attr("stroke-width",d.isTop11?2:1).attr("stroke",d.isTop11?"#999":"#f5f5f5").style("filter","none");hideTooltip()});
 
   node.append("text").text(d=>d.id).attr("class",d=>"nlbl nl-"+d.id.replace(/\s/g,"_"))
