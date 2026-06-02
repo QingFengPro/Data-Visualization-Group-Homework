@@ -18,6 +18,7 @@ env/
 src/__pycache__/
 docs/.geo_cache.json
 .geo_cache.json
+issues/
 
 # IDE
 .vscode/

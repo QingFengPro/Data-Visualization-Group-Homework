@@ -25,11 +25,15 @@ for _, row in df.iterrows():
     cn_name = str(row[name_col]).strip()
     iso = CN_TO_ISO.get(cn_name)
     if iso:
+        p125 = int(row[df.columns[4]])
+        p135 = int(row[df.columns[1]])
         country_data[iso] = {
             "name_cn": cn_name,
-            "papers_125": int(row[df.columns[4]]),
-            "papers_135": int(row[df.columns[1]]),
-            "papers_sum": int(row[df.columns[4]]) + int(row[df.columns[1]]),
+            "papers_125": p125,
+            "papers_135": p135,
+            "papers_sum": p125 + p135,
+            "delta": p135 - p125,
+            "delta_pct": round((p135 - p125) / p125 * 100, 1) if p125 > 0 else 0,
         }
 print(f"Matched countries from Excel: {len(country_data)}")
 
@@ -150,13 +154,14 @@ html = r"""<!DOCTYPE html>
 .main-container{display:flex;gap:16px;padding:16px;max-width:1500px;margin:0 auto}
 .map-panel{flex:1;background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:600px}
 .map-title{font-size:15px;font-weight:600;color:var(--c-primary);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e0e0e0}
-.map-container{width:100%;height:640px}
-.side-panel{flex:0 0 320px;display:flex;flex-direction:column;gap:16px}
+.map-container{width:100%;height:520px}
+.side-panel{flex:0 0 340px;display:flex;flex-direction:column;gap:16px}
 .rank-panel{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);flex:1}
 .rank-title{font-size:14px;font-weight:600;color:#3949ab;margin-bottom:10px}
-.rank-list{max-height:480px;overflow-y:auto}
-.rank-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid #fafafa;font-size:12px;transition:background 0.15s}
+.rank-list{max-height:420px;overflow-y:auto}
+.rank-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid #fafafa;font-size:12px;transition:background 0.15s;cursor:pointer}
 .rank-row:hover{background:#f0f0ff;border-radius:6px}
+.rank-row.active{background:#e8eaf6;border-radius:6px}
 .rank-badge{width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;background:#e0e0e0}
 .rank-badge.top1{background:#ffd740;color:#0a0e27}
 .rank-badge.top2{background:#b0bec5;color:#0a0e27}
@@ -169,10 +174,30 @@ html = r"""<!DOCTYPE html>
 .zoom-controls{position:absolute;bottom:24px;right:20px;display:flex;flex-direction:column;gap:5px;z-index:10}
 .zoom-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid #d0d0d0;background:#fff;color:#555;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:all 0.15s;font-family:inherit;line-height:1}
 .zoom-btn:hover{background:#e8eaf6;border-color:var(--c-primary);color:var(--c-primary)}
+/* Detail panel */
+.detail-panel{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-top:16px;display:none}
+.detail-panel.visible{display:block}
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e0e0e0}
+.detail-header h3{font-size:17px;font-weight:700;color:var(--c-primary);margin:0}
+.back-btn{padding:6px 14px;border:1.5px solid #ccc;border-radius:16px;background:#f5f5f5;color:#666;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.2s}
+.back-btn:hover{background:#eee;color:#333}
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.detail-item{text-align:center;padding:12px;background:#f5f7fa;border-radius:8px}
+.detail-num{font-size:20px;font-weight:800;color:var(--c-primary)}
+.detail-label{font-size:11px;color:#999;margin-top:4px}
+.detail-delta{font-size:18px;font-weight:700}
+.detail-delta.up{color:#2e7d32}
+.detail-delta.down{color:#c62828}
+.inst-list{margin-top:12px}
+.inst-list h4{font-size:13px;font-weight:600;color:#333;margin-bottom:8px}
+.inst-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+.inst-item:last-child{border-bottom:none}
+/* Delta bars on map */
+.delta-bar{stroke-linecap:round}
 </style>
 </head>
 <body>
-<div class="header"><h1>中东欧国家合作论文地理分布</h1><p>蓝色越亮 = 合作论文越多 | 鼠标悬停查看详情</p></div>
+<div class="header"><h1>中东欧国家合作论文地理分布</h1><p>蓝色越亮 = 合作论文越多 | 点击国家查看详情</p></div>
 <div class="controls">
   <button class="mode-btn active" data-mode="125">125 期间</button>
   <button class="mode-btn" data-mode="135">135 期间</button>
@@ -182,18 +207,81 @@ html = r"""<!DOCTYPE html>
 </div>
 <div class="main-container">
 <div class="map-panel" style="position:relative"><div class="map-title" id="mapTitle">合作论文地理分布 — 125 期间</div><div class="map-container" id="mapChart"></div><div class="zoom-controls"><button class="zoom-btn" onclick="zoomIn()">+</button><button class="zoom-btn" onclick="zoomOut()">−</button><button class="zoom-btn" onclick="zoomReset()" style="font-size:14px">⟲</button></div><div class="legend-container" id="legendBox"></div></div>
-<div class="side-panel"><div class="rank-panel"><div class="rank-title">各国合作论文排名</div><div class="rank-list" id="rankList"></div></div></div>
+<div class="side-panel">
+  <div class="rank-panel"><div class="rank-title">各国合作论文排名</div><div class="rank-list" id="rankList"></div></div>
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header"><button class="back-btn" onclick="showGlobal()">← 返回全局</button><h3 id="detailTitle">国家详情</h3></div>
+    <div class="detail-grid" id="detailGrid"></div>
+    <div class="inst-list" id="instList"></div>
+  </div>
+</div>
 </div>
 <div class="tooltip" id="tooltip"></div>
 <script>
 const GEO_JSON=__GEO_JSON__, COUNTRY_DATA=__COUNTRY_DATA__, NEIGHBOR_ISO=new Set(__NEIGHBOR_LIST__), INSTITUTIONS=__INSTITUTIONS_JSON__;
-let currentMode="125", showLabels=true;
+let currentMode="125", showLabels=true, selectedCountry=null;
 
 function getPapers(iso){const d=COUNTRY_DATA[iso];return d?(currentMode==="125"?d.papers_125:currentMode==="135"?d.papers_135:d.papers_sum):0}
 
+function getCountryCentroid(iso){
+  const feat=GEO_JSON.features.find(f=>f.properties.iso===iso);
+  if(!feat)return null;
+  const w=document.getElementById("mapChart").clientWidth, h=520;
+  const proj=d3.geoMercator().center([18,50]).scale(w*0.88).translate([w/2,h/2]);
+  return proj(d3.geoCentroid(feat));
+}
+
+function selectCountry(iso){
+  selectedCountry=iso;
+  const d=COUNTRY_DATA[iso];if(!d)return;
+  const centroid=getCountryCentroid(iso);
+  if(centroid){
+    const svgEl=document.querySelector("#mapChart svg");
+    if(!svgEl)return;
+    const w=document.getElementById("mapChart").clientWidth,h=520;
+    const scale=4;
+    const tx=w/2-centroid[0]*scale, ty=h/2-centroid[1]*scale;
+    const z=d3.zoom().scaleExtent([1,15]).on("zoom",(e)=>{d3.select("#mapGroup").attr("transform",e.transform)});
+    d3.select(svgEl).transition().duration(600).call(z.transform,d3.zoomIdentity.translate(tx,ty).scale(scale));
+  }
+  showDetail(iso);
+  d3.selectAll(".rank-row").classed("active",function(){return d3.select(this).datum().iso===iso});
+}
+
+function showGlobal(){
+  selectedCountry=null;
+  d3.select("#detailPanel").classed("visible",false);
+  const svg=d3.select("#mapChart svg");
+  svg.transition().duration(600).call(d3.zoom().transform,d3.zoomIdentity);
+  d3.selectAll(".rank-row").classed("active",false);
+}
+
+function showDetail(iso){
+  const d=COUNTRY_DATA[iso];if(!d)return;
+  const panel=d3.select("#detailPanel");panel.classed("visible",true);
+  d3.select("#detailTitle").text(d.name_cn);
+  const deltaColor=d.delta>=0?"up":"down";
+  const deltaSign=d.delta>=0?"+":"";
+  d3.select("#detailGrid").html(`
+    <div class="detail-item"><div class="detail-num">${d.papers_125.toLocaleString()}</div><div class="detail-label">125 期间</div></div>
+    <div class="detail-item"><div class="detail-num">${d.papers_135.toLocaleString()}</div><div class="detail-label">135 期间</div></div>
+    <div class="detail-item"><div class="detail-num">${d.papers_sum.toLocaleString()}</div><div class="detail-label">合计</div></div>
+    <div class="detail-item"><div class="detail-delta ${deltaColor}">${deltaSign}${d.delta.toLocaleString()}</div><div class="detail-label">变化 (${d.delta_pct}%)</div></div>
+  `);
+  const insts=INSTITUTIONS.filter(i=>i.country_iso===iso).sort((a,b)=>b.papers_sum-a.papers_sum).slice(0,5);
+  const instTotal=d3.sum(insts,i=>i.papers_sum);
+  let instHtml=`<h4>主要合作机构 (Top ${insts.length})</h4>`;
+  if(insts.length===0)instHtml+=`<p style="font-size:12px;color:#999">暂无机构数据</p>`;
+  else {
+    insts.forEach(i=>{instHtml+=`<div class="inst-item"><span>${i.name}</span><span>${i.papers_sum.toLocaleString()} 篇</span></div>`});
+    if(instTotal<d.papers_sum)instHtml+=`<p style="font-size:11px;color:#999;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0">注：机构合计 ${instTotal.toLocaleString()} 篇，尚有部分论文未归属到具体机构</p>`;
+  }
+  d3.select("#instList").html(instHtml);
+}
+
 function drawMap(){
   d3.select("#mapChart").selectAll("*").remove();
-  const w=d3.select("#mapChart").node().clientWidth, h=620;
+  const w=d3.select("#mapChart").node().clientWidth, h=520;
   const svg=d3.select("#mapChart").append("svg").attr("width",w).attr("height",h);
   const zoom=d3.zoom().scaleExtent([1,15]).on("zoom",(e)=>{d3.select("#mapGroup").attr("transform",e.transform)});
   svg.call(zoom).on("dblclick.zoom",null);
@@ -212,9 +300,11 @@ function drawMap(){
     .attr("fill",d=>{const iso=d.properties.iso;if(COUNTRY_DATA[iso]){const v=getPapers(iso);return v>0?colorScale(v):"#e8e8e8"}return"#f2f2f2"})
     .attr("stroke",d=>COUNTRY_DATA[d.properties.iso]?"#7986cb":"#f5f5f5")
     .attr("stroke-width",d=>COUNTRY_DATA[d.properties.iso]?1.2:0.5)
-    .on("mouseenter",function(e,d){const iso=d.properties.iso;if(COUNTRY_DATA[iso]){d3.select(this).attr("stroke-width",2.5).attr("stroke","#4fc3f7").style("filter","drop-shadow(0 0 6px rgba(79,195,247,0.5))");const dd=COUNTRY_DATA[iso];showTooltip(e,`<b style="color:#fff">${dd.name_cn}</b><br>125: ${dd.papers_125.toLocaleString()} 篇<br>135: ${dd.papers_135.toLocaleString()} 篇<br>合计: ${dd.papers_sum.toLocaleString()} 篇`)}else if(NEIGHBOR_ISO.has(iso))showTooltip(e,`<span style="color:#bbb">${d.properties.display_name||iso} (邻国)</span>`)})
+    .style("cursor",d=>COUNTRY_DATA[d.properties.iso]?"pointer":"default")
+    .on("mouseenter",function(e,d){const iso=d.properties.iso;if(COUNTRY_DATA[iso]){d3.select(this).attr("stroke-width",2.5).attr("stroke","#4fc3f7").style("filter","drop-shadow(0 0 6px rgba(79,195,247,0.5))");const dd=COUNTRY_DATA[iso];showTooltip(e,`<b style="color:#fff">${dd.name_cn}</b><br>125: ${dd.papers_125.toLocaleString()} 篇<br>135: ${dd.papers_135.toLocaleString()} 篇<br>合计: ${dd.papers_sum.toLocaleString()} 篇`)}})
     .on("mousemove",function(e){d3.select("#tooltip").style("left",(e.pageX+14)+"px").style("top",(e.pageY-10)+"px")})
-    .on("mouseleave",function(e,d){if(COUNTRY_DATA[d.properties.iso]){d3.select(this).attr("stroke-width",1.2).attr("stroke","#7986cb").style("filter","none")}hideTooltip()});
+    .on("mouseleave",function(e,d){if(COUNTRY_DATA[d.properties.iso]){d3.select(this).attr("stroke-width",1.2).attr("stroke","#7986cb").style("filter","none")}hideTooltip()})
+    .on("click",function(e,d){const iso=d.properties.iso;if(COUNTRY_DATA[iso])selectCountry(iso)});
 
   mapG.append("g").selectAll("text").data(GEO_JSON.features).join("text")
     .attr("transform",d=>`translate(${pathGen.centroid(d)})`)
@@ -222,6 +312,22 @@ function drawMap(){
     .style("font-size",d=>COUNTRY_DATA[d.properties.iso]?"10px":"8px").style("font-weight",d=>COUNTRY_DATA[d.properties.iso]?"700":"400")
     .style("fill","#fff").style("stroke","rgba(0,0,0,0.7)").style("stroke-width","0.6px").style("paint-order","stroke")
     .style("pointer-events","none").text(d=>d.properties.display_name||d.properties.iso);
+
+  // Delta bars
+  const maxDelta=d3.max(Object.values(COUNTRY_DATA),d=>Math.abs(d.delta))||1;
+  const deltaScale=d3.scaleLinear().domain([-maxDelta,maxDelta]).range([-60,60]);
+  const fMap={};GEO_JSON.features.forEach(f=>{const iso=f.properties.iso;if(iso&&COUNTRY_DATA[iso])fMap[iso]=f});
+  Object.entries(COUNTRY_DATA).forEach(([iso,d])=>{
+    const feat=fMap[iso];if(!feat)return;
+    const [cx,cy]=pathGen.centroid(feat);
+    const barW=deltaScale(d.delta)-deltaScale(0);
+    mapG.append("line")
+      .attr("x1",cx+(d.delta>=0?0:barW)).attr("y1",cy+18)
+      .attr("x2",cx+(d.delta>=0?barW:0)).attr("y2",cy+18)
+      .attr("stroke",d.delta>=0?"#69f0ae":"#ff6e40")
+      .attr("stroke-width",3).attr("class","delta-bar").attr("opacity",0.85);
+    mapG.append("circle").attr("cx",cx).attr("cy",cy+18).attr("r",2.5).attr("fill","#fff").attr("stroke","#999").attr("stroke-width",0.5);
+  });
 
   if(showLabels) drawInstLabels(mapG,proj,pathGen);
   drawLegend(maxVal, colorScale);
@@ -236,7 +342,7 @@ function drawInstLabels(svg,proj,pathGen){
   for(const[iso,insts]of Object.entries(byC)){
     const feat=fMap[iso];if(!feat)continue;
     const[cx,cy]=pathGen.centroid(feat);
-    insts.sort((a,b)=>(currentMode==="125"?b.papers_125-b.papers_125:currentMode==="135"?b.papers_135-b.papers_135:b.papers_sum-a.papers_sum));
+    insts.sort((a,b)=>(currentMode==="125"?b.papers_125-a.papers_125:currentMode==="135"?b.papers_135-a.papers_135:b.papers_sum-a.papers_sum));
     insts.forEach((inst,i)=>{const v=currentMode==="125"?inst.papers_125:currentMode==="135"?inst.papers_135:inst.papers_sum;const ang=i/insts.length*Math.PI*2+0.5;const dist=18+i*4;const mx=cx+Math.cos(ang)*dist,my=cy+Math.sin(ang)*dist;
     svg.append("circle").attr("cx",mx).attr("cy",my).attr("r",rS(v)).attr("fill","#ff6e40").attr("stroke","#0a0e27").attr("stroke-width",1.5).attr("opacity",0.82).style("cursor","pointer")
     .on("mouseenter",function(e){d3.select(this).attr("fill","#7c4dff").attr("stroke","#fff").attr("stroke-width",2).transition().duration(120).attr("r",rS(v)*1.3);showTooltip(e,`<b>${inst.name}</b><br>${inst.country_cn}<br>125: ${inst.papers_125} | 135: ${inst.papers_135}<br>合计: ${inst.papers_sum} 篇`)})
@@ -255,9 +361,10 @@ function drawLegend(maxVal,cs){
 
 function drawRankList(){
   const c=d3.select("#rankList");c.selectAll("*").remove();
-  const entries=Object.values(COUNTRY_DATA).map(d=>({...d,papers:currentMode==="125"?d.papers_125:currentMode==="135"?d.papers_135:d.papers_sum})).sort((a,b)=>b.papers-a.papers);
+  const entries=Object.entries(COUNTRY_DATA).map(([iso,d])=>({...d,iso,papers:currentMode==="125"?d.papers_125:currentMode==="135"?d.papers_135:d.papers_sum})).sort((a,b)=>b.papers-a.papers);
   const mp=entries[0]?.papers||1;
   c.selectAll(".rank-row").data(entries).join("div").attr("class","rank-row")
+    .on("click",(e,d)=>selectCountry(d.iso))
     .html((d,i)=>`<span class="rank-badge${i<3?' top'+(i+1):''}">${i+1}</span><span class="rank-name">${d.name_cn}</span><span class="rank-val">${d.papers.toLocaleString()} 篇</span><span class="rank-bar" style="width:${Math.max(d.papers/mp*80,3)}px;background:${i<3?'#4fc3f7':'#555'}"></span>`);
 }
 
@@ -268,8 +375,8 @@ d3.selectAll(".mode-btn").on("click",function(){currentMode=this.dataset.mode;d3
 d3.select("#labelToggle").on("click",function(){showLabels=!showLabels;d3.select(this).classed("active",showLabels).text(showLabels?"机构标签: 开":"机构标签: 关");updateAll()});
 function zoomIn(){const el=document.querySelector("#mapChart svg");if(!el)return;const z=d3.zoom().scaleExtent([1,15]);d3.select(el).transition().duration(300).call(z.scaleBy,1.5)}
 function zoomOut(){const el=document.querySelector("#mapChart svg");if(!el)return;const z=d3.zoom().scaleExtent([1,15]);d3.select(el).transition().duration(300).call(z.scaleBy,0.65)}
-function zoomReset(){const el=document.querySelector("#mapChart svg");if(!el)return;d3.select("#mapGroup").attr("transform",null);const z=d3.zoom().scaleExtent([1,15]);d3.select(el).transition().duration(300).call(z.transform,d3.zoomIdentity)}
-function updateAll(){drawMap();drawRankList()}
+function zoomReset(){showGlobal()}
+function updateAll(){drawMap();drawRankList();if(selectedCountry)showDetail(selectedCountry)}
 updateAll();
 </script>
 </body>
